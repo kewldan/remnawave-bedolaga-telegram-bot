@@ -200,6 +200,7 @@ _PRESET_ROLES: list[dict] = [
             'landings:edit',
             'landings:delete',
             'system_errors:*',
+            'stars_shop:*',
         ],
         'color': '#F59E0B',
         'icon': 'crown',

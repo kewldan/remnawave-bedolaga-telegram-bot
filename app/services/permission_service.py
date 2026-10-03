@@ -90,6 +90,7 @@ PERMISSION_REGISTRY: dict[str, list[str]] = {
     'bulk_actions': ['read', 'execute'],
     'info_pages': ['read', 'create', 'edit', 'delete'],
     'news': ['read', 'create', 'edit', 'delete'],
+    'stars_shop': ['read', 'manage'],
 }
 
 

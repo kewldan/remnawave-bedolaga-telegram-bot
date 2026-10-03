@@ -104,6 +104,7 @@ from app.database.models import (
     ServiceRule,
     SeverPayPayment,
     Squad,
+    StarsOrder,
     Subscription,
     SubscriptionConversion,
     SubscriptionEvent,
@@ -297,6 +298,8 @@ class BackupService:
             # --- Landing / Guest purchases (FK: users, tariffs, landings) ---
             LandingPage,
             GuestPurchase,
+            # --- Stars shop (FK: users, transactions) ---
+            StarsOrder,
             # --- Yandex analytics (FK: users) ---
             YandexClientIdMap,
             # --- User data (FK: users, promo_groups, subscriptions) ---
@@ -1733,6 +1736,8 @@ class BackupService:
             # --- Landing / Guest purchases ---
             'guest_purchases',
             'landing_pages',
+            # --- Stars shop ---
+            'stars_orders',
             # --- Yandex analytics ---
             'yandex_client_id_map',
             # --- Support ---
