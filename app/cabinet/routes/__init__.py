@@ -43,6 +43,7 @@ from .admin_roles import router as admin_roles_router
 from .admin_sales_stats import router as admin_sales_stats_router
 from .admin_servers import router as admin_servers_router
 from .admin_settings import router as admin_settings_router
+from .admin_stars_shop import router as admin_stars_shop_router
 from .admin_stats import router as admin_stats_router
 from .admin_system_errors import router as admin_system_errors_router
 from .admin_tariffs import router as admin_tariffs_router
@@ -73,6 +74,7 @@ from .promocode import router as promocode_router
 from .referral import router as referral_router
 from .reminders import router as reminders_router
 from .site_verification import router as site_verification_router
+from .stars_shop import router as stars_shop_router
 from .subscription import router as subscription_router
 from .subscription_modules.multi_tariff import router as multi_tariff_subscription_router
 from .support_ws import router as support_ws_router
@@ -136,6 +138,7 @@ router.include_router(wheel_router)
 
 # Gift routes
 router.include_router(gift_router)
+router.include_router(stars_shop_router)
 
 # Admin routes (notifications router MUST be before tickets router to avoid route conflict)
 router.include_router(admin_ticket_notifications_router)
@@ -153,6 +156,7 @@ router.include_router(admin_dpichecker_router)
 router.include_router(dpichecker_download_router)
 router.include_router(admin_broadcasts_router)
 router.include_router(admin_promocodes_router)
+router.include_router(admin_stars_shop_router)
 router.include_router(admin_promo_groups_router)
 router.include_router(admin_coupons_router)
 router.include_router(admin_campaigns_router)
