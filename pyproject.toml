@@ -37,6 +37,12 @@ dependencies = [
     'starlette==1.7.0',
     'attrs==26.1.0',
     'pillow==12.3.0',
+    # Магазин звёзд: протокол Fragment (app/external/fragment) и подпись TON-транзакций
+    'curl-cffi==0.16.3',
+    'tonutils==2.3.1',
+    'pynacl==1.6.2',
+    'ton-core==0.6.0',
+    'selectolax==1.0.0',
 ]
 
 [dependency-groups]
@@ -76,6 +82,7 @@ exclude = [
     'node_modules',
     'venv',
     'migrations',
+    'app/external/fragment/_vendor',
 ]
 
 [tool.ruff.lint]
