@@ -89,6 +89,10 @@ class BotConfigurationService:
         'WEB_API_DEFAULT_TOKEN',
         'WEB_API_TOKEN_HMAC_SECRET',
         'WEBHOOK_SECRET_TOKEN',
+        # Кошелёк и сессия Fragment управляют деньгами — только через .env.
+        'FRAGMENT_COOKIES',
+        'FRAGMENT_WALLET_MNEMONIC',
+        'FRAGMENT_TON_API_KEY',
     }
 
     READ_ONLY_KEYS: set[str] = set()
@@ -174,6 +178,7 @@ class BotConfigurationService:
         'TRAFFIC_PACKAGES': '📦 Пакеты трафика',
         'TRIAL': '🎁 Пробный период',
         'REFERRAL': '👥 Реферальная программа',
+        'STARS_SHOP': '⭐ Магазин звёзд',
         'AUTOPAY': '🔄 Автопродление',
         'NOTIFICATIONS': '🔔 Уведомления пользователям',
         'ADMIN_NOTIFICATIONS': '📣 Оповещения администраторам',
@@ -255,6 +260,7 @@ class BotConfigurationService:
         'TRAFFIC_PACKAGES': 'Цены пакетов трафика и конфигурация предложений.',
         'TRIAL': 'Длительность и ограничения пробного периода.',
         'REFERRAL': 'Бонусы и пороги реферальной программы.',
+        'STARS_SHOP': 'Продажа звёзд Telegram с баланса и выдача через Fragment.',
         'AUTOPAY': 'Настройки автопродления и минимальный баланс.',
         'NOTIFICATIONS': 'Пользовательские уведомления и кэширование сообщений.',
         'ADMIN_NOTIFICATIONS': 'Оповещения админам о событиях и тикетах.',
@@ -489,6 +495,8 @@ class BotConfigurationService:
         'PRICE_TRAFFIC': 'TRAFFIC_PACKAGES',
         'TRAFFIC_': 'TRAFFIC',
         'REFERRAL_': 'REFERRAL',
+        'STARS_SHOP_': 'STARS_SHOP',
+        'FRAGMENT_': 'STARS_SHOP',
         'USER_REMINDERS_': 'NOTIFICATIONS',
         'AUTOPAY_': 'AUTOPAY',
         'TELEGRAM_OIDC_': 'TELEGRAM_OIDC',
@@ -564,6 +572,14 @@ class BotConfigurationService:
         'REFERRAL_ALLOW_REWARD_KIND_CHOICE': [
             ChoiceOption('true', '✅ Разрешено', 'Пользователь выбирает: деньги или дни, когда правило даёт оба'),
             ChoiceOption('false', '⛔️ Запрещено', 'Выдаётся всё, что настроено правилом'),
+        ],
+        'FRAGMENT_TON_API_PROVIDER': [
+            ChoiceOption('toncenter', 'Toncenter', 'toncenter.com — ключ через @tonapibot'),
+            ChoiceOption('tonapi', 'TonAPI', 'tonapi.io — ключ в tonconsole.com'),
+        ],
+        'FRAGMENT_WALLET_VERSION': [
+            ChoiceOption('V5R1', 'W5 (V5R1)', 'Кошелёк Tonkeeper/Telegram Wallet последних версий'),
+            ChoiceOption('V4R2', 'V4R2', 'Кошелёк старого формата'),
         ],
         'REFERRAL_LEVELS_MODE': [
             ChoiceOption('chain', '🔗 Цепочка', 'Уровень = глубина: платят и пригласившему, и тем, кто выше'),

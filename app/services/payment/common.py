@@ -118,6 +118,15 @@ class PaymentCommonMixin:
                             )
                         ]
                     )
+                elif cart_mode == 'stars_purchase':
+                    keyboard_rows.append(
+                        [
+                            InlineKeyboardButton(
+                                text=texts.t('STARS_SHOP_RETURN_TO_CART_BUTTON', '⭐ Вернуться к заказу звёзд'),
+                                callback_data='stars_shop_return_to_cart',
+                            )
+                        ]
+                    )
                 else:
                     keyboard_rows.append(
                         [

@@ -378,6 +378,12 @@ async def main():
 
         await email_retry_service.start()
 
+        # Выдача звёзд Telegram: очередь заказов магазина звёзд (оплачены с баланса).
+        from app.services.stars_fulfillment_service import stars_fulfillment_service
+
+        stars_fulfillment_service.set_bot(bot)
+        await stars_fulfillment_service.start()
+
         from app.services.channel_subscription_service import channel_subscription_service
 
         channel_subscription_service.bot = bot
@@ -1072,6 +1078,14 @@ async def main():
             await email_retry_service.stop()
         except Exception as e:
             logger.warning('Ошибка остановки очереди повторной отправки писем', error=e)
+
+        logger.info('ℹ️ Остановка выдачи звёзд...')
+        try:
+            from app.services.stars_fulfillment_service import stars_fulfillment_service
+
+            await stars_fulfillment_service.stop()
+        except Exception as e:
+            logger.warning('Ошибка остановки выдачи звёзд', error=e)
 
         logger.info('ℹ️ Остановка журнала системных ошибок...')
         try:

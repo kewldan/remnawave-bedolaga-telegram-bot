@@ -3506,6 +3506,10 @@ async def auto_purchase_saved_cart_after_topup(
 
     # Check for explicit global gift_purchase cart first (isolated from subscription carts)
     global_cart = await user_cart_service.get_user_cart(user.id)
+    if global_cart and global_cart.get('cart_mode') == 'stars_purchase':
+        from app.services.stars_cart_service import auto_purchase_stars_cart
+
+        return await auto_purchase_stars_cart(db, user, global_cart, bot=bot)
     if global_cart and (global_cart.get('cart_mode') == 'gift_purchase' or global_cart.get('mode') == 'gift_purchase'):
         has_fresh_intent = await user_cart_service.has_topup_intent(user.id)
         if not has_fresh_intent:
