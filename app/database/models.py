@@ -138,6 +138,7 @@ class TransactionType(Enum):
     REFERRAL_REWARD = 'referral_reward'
     POLL_REWARD = 'poll_reward'
     GIFT_PAYMENT = 'gift_payment'
+    STARS_PAYMENT = 'stars_payment'
 
 
 class PromoCodeType(Enum):
@@ -5439,3 +5440,64 @@ class UserReminderState(Base):
     # Последний успех — по нему общий лимит «одно напоминание в сутки».
     last_success_at = Column(AwareDateTime(), nullable=True)
     dismissed_at = Column(AwareDateTime(), nullable=True)
+
+
+class StarsOrderStatus(StrEnum):
+    """Жизненный цикл заказа звёзд.
+
+    Деньги списаны с баланса уже в ``PAID``. Дальше заказ ведёт обработчик выдачи:
+    ``PROCESSING`` — заявка на Fragment, ``BROADCASTING`` — перевод TON уходит в сеть.
+    ``NEEDS_REVIEW`` — перевод мог пройти, итог неизвестен: только ручная проверка,
+    автоматический повтор и возврат запрещены (иначе возможна двойная выдача).
+    """
+
+    PAID = 'paid'
+    PROCESSING = 'processing'
+    BROADCASTING = 'broadcasting'
+    COMPLETED = 'completed'
+    FAILED = 'failed'
+    REFUNDED = 'refunded'
+    NEEDS_REVIEW = 'needs_review'
+
+
+class StarsOrder(Base):
+    """Заказ звёзд Telegram, оплаченный с баланса."""
+
+    __tablename__ = 'stars_orders'
+    __table_args__ = (
+        Index('ix_stars_orders_status_next_attempt', 'status', 'next_attempt_at'),
+        Index('ix_stars_orders_user_created', 'user_id', 'created_at'),
+        Index('ux_stars_orders_idempotency_key', 'idempotency_key', unique=True),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    recipient_username = Column(String(64), nullable=False)
+    recipient_name = Column(String(255), nullable=True)
+    quantity = Column(Integer, nullable=False)
+    amount_kopeks = Column(Integer, nullable=False)
+    status = Column(String(20), nullable=False, default=StarsOrderStatus.PAID.value)
+    source = Column(String(20), nullable=False, default='bot', server_default='bot')
+    idempotency_key = Column(String(128), nullable=False)
+    transaction_id = Column(Integer, ForeignKey('transactions.id', ondelete='SET NULL'), nullable=True)
+    refund_transaction_id = Column(Integer, ForeignKey('transactions.id', ondelete='SET NULL'), nullable=True)
+    fragment_req_id = Column(String(128), nullable=True)
+    ton_tx_hash = Column(String(128), nullable=True)
+    cost_nanoton = Column(BigInteger, nullable=True)
+    attempts = Column(Integer, nullable=False, default=0, server_default='0')
+    last_error = Column(Text, nullable=True)
+    next_attempt_at = Column(AwareDateTime(), nullable=True)
+    processing_started_at = Column(AwareDateTime(), nullable=True)
+    completed_at = Column(AwareDateTime(), nullable=True)
+    refunded_at = Column(AwareDateTime(), nullable=True)
+    created_at = Column(AwareDateTime(), server_default=func.now(), nullable=False)
+    updated_at = Column(AwareDateTime(), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    user = relationship('User', foreign_keys=[user_id])
+
+    @property
+    def is_final(self) -> bool:
+        return self.status in (
+            StarsOrderStatus.COMPLETED.value,
+            StarsOrderStatus.REFUNDED.value,
+        )

@@ -65,6 +65,14 @@ def addon_description_clause(description_column):
     return or_(*(description_column.ilike(p) for p in ADDON_DESCRIPTION_PATTERNS))
 
 
+# Списания с баланса: хранятся с минусом, способ оплаты по умолчанию — баланс.
+_BALANCE_DEBIT_TYPES = (
+    TransactionType.SUBSCRIPTION_PAYMENT,
+    TransactionType.GIFT_PAYMENT,
+    TransactionType.STARS_PAYMENT,
+)
+
+
 async def create_transaction(
     db: AsyncSession,
     user_id: int,
@@ -78,17 +86,13 @@ async def create_transaction(
     *,
     commit: bool = True,
 ) -> Transaction:
-    # SUBSCRIPTION_PAYMENT / GIFT_PAYMENT — always store as negative (debit from user balance)
+    # SUBSCRIPTION_PAYMENT / GIFT_PAYMENT / STARS_PAYMENT — always store as negative (debit from user balance)
     # Keep original for downstream consumers (events, contests)
-    stored_amount = (
-        -amount_kopeks
-        if type in (TransactionType.SUBSCRIPTION_PAYMENT, TransactionType.GIFT_PAYMENT) and amount_kopeks > 0
-        else amount_kopeks
-    )
+    stored_amount = -amount_kopeks if type in _BALANCE_DEBIT_TYPES and amount_kopeks > 0 else amount_kopeks
 
     # Default payment_method to BALANCE for subscription/gift payments from bot (not landing)
     # to avoid double-counting with DEPOSIT in revenue calculations
-    if payment_method is None and type in (TransactionType.SUBSCRIPTION_PAYMENT, TransactionType.GIFT_PAYMENT):
+    if payment_method is None and type in _BALANCE_DEBIT_TYPES:
         payment_method = PaymentMethod.BALANCE
 
     transaction = Transaction(
@@ -292,7 +296,7 @@ async def get_user_total_spent_kopeks(db: AsyncSession, user_id: int) -> int:
     """Sum of personal spending for promo group auto-assignment.
 
     Only counts SUBSCRIPTION_PAYMENT (user's own subscriptions).
-    GIFT_PAYMENT is excluded — buying a gift for someone else is not personal spending.
+    GIFT_PAYMENT and STARS_PAYMENT are excluded — gifts and Telegram Stars are not VPN spending.
     """
     result = await db.execute(
         select(func.coalesce(func.sum(func.abs(Transaction.amount_kopeks)), 0)).where(

@@ -851,6 +851,7 @@ async def get_user_detail(
         TransactionType.WITHDRAWAL.value,
         TransactionType.SUBSCRIPTION_PAYMENT.value,
         TransactionType.GIFT_PAYMENT.value,
+        TransactionType.STARS_PAYMENT.value,
     }
 
     recent_transactions = [
@@ -3371,6 +3372,7 @@ async def get_user_transactions(
         TransactionType.WITHDRAWAL.value,
         TransactionType.SUBSCRIPTION_PAYMENT.value,
         TransactionType.GIFT_PAYMENT.value,
+        TransactionType.STARS_PAYMENT.value,
     }
 
     items = [

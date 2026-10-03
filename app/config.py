@@ -716,6 +716,30 @@ class Settings(BaseSettings):
 
     AUTO_PURCHASE_AFTER_TOPUP_ENABLED: bool = False
 
+    # Магазин звёзд Telegram: оплата с баланса, выдача через Fragment (docs/telegram-stars-shop.md)
+    STARS_SHOP_ENABLED: bool = False
+    STARS_SHOP_PRICE_PER_STAR_KOPEKS: int = 160
+    STARS_SHOP_MIN_QUANTITY: int = 50
+    STARS_SHOP_MAX_QUANTITY: int = 10000
+    STARS_SHOP_PRESETS: str = '50,100,250,500,1000'
+    # Показывать получателю, от кого звёзды (подпись аккаунта Fragment)
+    STARS_SHOP_SHOW_SENDER: bool = False
+    # Сколько раз пытаться выдать заказ до возврата денег на баланс
+    STARS_SHOP_MAX_ATTEMPTS: int = 5
+    STARS_SHOP_RETRY_DELAY_SECONDS: int = 120
+    STARS_SHOP_WORKER_INTERVAL_SECONDS: int = 10
+    # Курс TON в копейках — только для расчёта маржи в статистике; 0 = не считать
+    STARS_SHOP_TON_RATE_KOPEKS: int = 0
+    # Тестовый режим: заказ проходит все статусы без обращения к Fragment и кошельку
+    STARS_SHOP_DRY_RUN: bool = False
+    # Доступ к Fragment. Секреты задаются только в .env и не показываются в админке.
+    FRAGMENT_COOKIES: str = ''
+    FRAGMENT_WALLET_MNEMONIC: str = ''
+    FRAGMENT_TON_API_KEY: str = ''
+    FRAGMENT_TON_API_PROVIDER: str = 'toncenter'
+    FRAGMENT_WALLET_VERSION: str = 'V5R1'
+    FRAGMENT_PROXY: str = ''
+
     # Отключение превью ссылок в сообщениях бота
     DISABLE_WEB_PAGE_PREVIEW: bool = False
     ACTIVATE_BUTTON_VISIBLE: bool = False
@@ -2311,6 +2335,25 @@ class Settings(BaseSettings):
             return normalized in {'1', 'true', 'yes', 'on'}
 
         return bool(value)
+
+    def get_stars_shop_presets(self) -> list[int]:
+        """Пресеты количества звёзд в пределах min/max, по возрастанию, без повторов."""
+        presets: set[int] = set()
+        for chunk in str(self.STARS_SHOP_PRESETS or '').split(','):
+            chunk = chunk.strip()
+            if chunk.isdigit():
+                value = int(chunk)
+                if self.STARS_SHOP_MIN_QUANTITY <= value <= self.STARS_SHOP_MAX_QUANTITY:
+                    presets.add(value)
+        return sorted(presets)
+
+    def is_fragment_configured(self) -> bool:
+        """Заданы ли cookies, seed-фраза и ключ TON API для реальной выдачи."""
+        return bool(
+            (self.FRAGMENT_COOKIES or '').strip()
+            and (self.FRAGMENT_WALLET_MNEMONIC or '').strip()
+            and (self.FRAGMENT_TON_API_KEY or '').strip()
+        )
 
     def is_auto_purchase_after_topup_enabled(self) -> bool:
         value = getattr(self, 'AUTO_PURCHASE_AFTER_TOPUP_ENABLED', False)
