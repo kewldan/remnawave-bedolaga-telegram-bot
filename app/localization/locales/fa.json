@@ -2350,5 +2350,9 @@
   "STARS_SHOP_STATUS_COMPLETED": "تحویل شد",
   "STARS_SHOP_STATUS_FAILED": "خطا",
   "STARS_SHOP_STATUS_REFUNDED": "وجه برگشت داده شد",
-  "STARS_SHOP_STATUS_NEEDS_REVIEW": "در حال بررسی"
+  "STARS_SHOP_STATUS_NEEDS_REVIEW": "در حال بررسی",
+  "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 راستی، ما VPN هم داریم — {days} روز رایگان امتحان کنید.",
+  "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 امتحان رایگان VPN",
+  "STARS_SHOP_VPN_OFFER_BUY": "🔐 راستی، ما VPN هم داریم — راه‌اندازی در یک دقیقه.",
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 خرید VPN"
 }

@@ -263,3 +263,22 @@ async def test_dry_run_completes_without_fragment(monkeypatch):
         order = await _order(maker, order_id)
         assert order.status == StarsOrderStatus.COMPLETED.value
         assert order.ton_tx_hash.startswith('dry-run')
+
+
+@pytest.mark.asyncio
+async def test_completed_message_offers_vpn_to_buyer_without_subscription(monkeypatch):
+    monkeypatch.setattr(settings, 'STARS_SHOP_VPN_OFFER_ENABLED', True)
+    monkeypatch.setattr(settings, 'TRIAL_DURATION_DAYS', 3)
+    monkeypatch.setattr(settings, 'TRIAL_DISABLED_FOR', 'none')
+    async with _worker_db(monkeypatch) as maker:
+        order_id = await _seed(maker)
+        service = fulfillment.StarsFulfillmentService()
+        bot = MagicMock()
+        bot.send_message = AsyncMock()
+        service.set_bot(bot)
+        await service._notify_user(await _order(maker, order_id), 'completed')
+
+        text = bot.send_message.await_args.args[1]
+        markup = bot.send_message.await_args.kwargs['reply_markup']
+        assert 'звёзд отправлены' in text and 'VPN' in text
+        assert markup.inline_keyboard[0][0].callback_data == 'menu_trial'

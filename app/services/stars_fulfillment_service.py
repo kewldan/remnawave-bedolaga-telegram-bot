@@ -19,6 +19,7 @@ from datetime import UTC, datetime, timedelta
 import structlog
 from aiogram import Bot
 from sqlalchemy import or_, select, update
+from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.database.database import AsyncSessionLocal
@@ -31,7 +32,12 @@ from app.external.fragment import (
     FragmentStarsClient,
     StarsPurchaseReceipt,
 )
-from app.services.stars_notifications import WalletSnapshot, build_completed_message, build_order_keyboard
+from app.services.stars_notifications import (
+    WalletSnapshot,
+    build_completed_message,
+    build_order_keyboard,
+    build_vpn_offer,
+)
 from app.services.ton_rate_service import TonRate, get_ton_rate
 
 
@@ -303,15 +309,20 @@ class StarsFulfillmentService:
             from app.localization.texts import get_texts
 
             async with AsyncSessionLocal() as db:
-                user = await db.get(User, order.user_id)
+                user = await db.get(User, order.user_id, options=[selectinload(User.subscriptions)])
             if user is None or not user.telegram_id:
                 return
             texts = get_texts(user.language)
+            reply_markup = None
             if kind == 'completed':
                 text = texts.t(
                     'STARS_SHOP_ORDER_COMPLETED',
                     '⭐ Готово! {quantity} звёзд отправлены пользователю @{recipient}.',
                 ).format(quantity=order.quantity, recipient=order.recipient_username)
+                offer = build_vpn_offer(user, texts)
+                if offer is not None:
+                    text = f'{text}\n\n{offer[0]}'
+                    reply_markup = offer[1]
             elif kind == 'recipient_not_found':
                 text = texts.t(
                     'STARS_SHOP_ORDER_REFUNDED_RECIPIENT',
@@ -322,7 +333,7 @@ class StarsFulfillmentService:
                     'STARS_SHOP_ORDER_REFUNDED',
                     '↩️ Не удалось отправить звёзды по заказу #{order_id}. {amount} вернули на баланс.',
                 ).format(order_id=order.id, amount=texts.format_price(order.amount_kopeks))
-            await self._bot.send_message(user.telegram_id, text)
+            await self._bot.send_message(user.telegram_id, text, reply_markup=reply_markup)
         except Exception as exc:
             logger.warning('Звёзды: не удалось уведомить пользователя', order_id=order.id, error=str(exc))
 

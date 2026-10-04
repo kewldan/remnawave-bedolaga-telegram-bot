@@ -2350,5 +2350,9 @@
   "STARS_SHOP_STATUS_COMPLETED": "доставлено",
   "STARS_SHOP_STATUS_FAILED": "ошибка",
   "STARS_SHOP_STATUS_REFUNDED": "деньги возвращены",
-  "STARS_SHOP_STATUS_NEEDS_REVIEW": "проверяем"
+  "STARS_SHOP_STATUS_NEEDS_REVIEW": "проверяем",
+  "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 Кстати, у нас есть VPN — попробуйте {days} дн. бесплатно.",
+  "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 Попробовать VPN бесплатно",
+  "STARS_SHOP_VPN_OFFER_BUY": "🔐 Кстати, у нас есть VPN — подключается за минуту.",
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 Подключить VPN"
 }

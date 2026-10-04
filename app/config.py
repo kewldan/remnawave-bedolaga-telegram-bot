@@ -731,6 +731,7 @@ class Settings(BaseSettings):
     # Курс TON в копейках — только для расчёта маржи в статистике; 0 = не считать
     STARS_SHOP_TON_RATE_KOPEKS: int = 0  # 0 — курс TON с tonapi.io автоматически
     STARS_SHOP_WALLET_LOW_STARS: int = 1000  # предупреждать, когда кошелька хватит на меньшее число звёзд
+    STARS_SHOP_VPN_OFFER_ENABLED: bool = True  # после выдачи звёзд предложить VPN тем, у кого нет подписки
     # Тестовый режим: заказ проходит все статусы без обращения к Fragment и кошельку
     STARS_SHOP_DRY_RUN: bool = False
     # Доступ к Fragment. Секреты задаются только в .env и не показываются в админке.
