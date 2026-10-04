@@ -24,6 +24,7 @@ DEFAULT_BUTTON_STYLES: dict[str, dict] = {
     'info': {'style': 'primary', 'icon_custom_emoji_id': '', 'enabled': True, 'labels': {}},
     'admin': {'style': 'danger', 'icon_custom_emoji_id': '', 'enabled': True, 'labels': {}},
     'language': {'style': 'primary', 'icon_custom_emoji_id': '', 'enabled': True, 'labels': {}},
+    'stars': {'style': 'primary', 'icon_custom_emoji_id': '', 'enabled': True, 'labels': {}},
 }
 
 BOT_LOCALES = ('ru', 'en', 'ua', 'zh', 'fa')
@@ -42,6 +43,7 @@ CALLBACK_TO_SECTION: dict[str, str] = {
     'subscription_resume_checkout': 'subscription',
     'return_to_saved_cart': 'subscription',
     'menu_buy': 'subscription',
+    'menu_stars_shop': 'stars',
     'buy_traffic': 'subscription',
     'menu_balance': 'balance',
     'balance_topup': 'balance',
