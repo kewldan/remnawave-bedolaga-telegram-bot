@@ -729,7 +729,8 @@ class Settings(BaseSettings):
     STARS_SHOP_RETRY_DELAY_SECONDS: int = 120
     STARS_SHOP_WORKER_INTERVAL_SECONDS: int = 10
     # Курс TON в копейках — только для расчёта маржи в статистике; 0 = не считать
-    STARS_SHOP_TON_RATE_KOPEKS: int = 0
+    STARS_SHOP_TON_RATE_KOPEKS: int = 0  # 0 — курс TON с tonapi.io автоматически
+    STARS_SHOP_WALLET_LOW_STARS: int = 1000  # предупреждать, когда кошелька хватит на меньшее число звёзд
     # Тестовый режим: заказ проходит все статусы без обращения к Fragment и кошельку
     STARS_SHOP_DRY_RUN: bool = False
     # Доступ к Fragment. Секреты задаются только в .env и не показываются в админке.

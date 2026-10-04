@@ -16,6 +16,7 @@ from app.config import settings
 from app.database.models import StarsOrder, StarsOrderStatus, User
 from app.external.fragment import FragmentStarsError
 from app.services import stars_shop_service as shop
+from app.services.ton_rate_service import get_ton_rate
 
 from ..dependencies import get_cabinet_db, require_permission
 from ..schemas.stars_shop import (
@@ -38,12 +39,9 @@ _STATUSES = {item.value for item in StarsOrderStatus}
 
 async def _to_admin_response(db: AsyncSession, order: StarsOrder) -> AdminStarsOrderResponse:
     user_display = None
-    if order.user_id is not None:
-        user = await db.get(User, order.user_id)
-        if user is not None:
-            user_display = (
-                f'@{user.username}' if user.username else (user.email or str(user.telegram_id or f'#{user.id}'))
-            )
+    user = await db.get(User, order.user_id) if order.user_id is not None else None
+    if user is not None:
+        user_display = f'@{user.username}' if user.username else (user.email or str(user.telegram_id or f'#{user.id}'))
     return AdminStarsOrderResponse(
         id=order.id,
         status=order.status,
@@ -62,14 +60,20 @@ async def _to_admin_response(db: AsyncSession, order: StarsOrder) -> AdminStarsO
         fragment_req_id=order.fragment_req_id,
         ton_tx_hash=order.ton_tx_hash,
         cost_nanoton=order.cost_nanoton,
+        ton_rate_kopeks=order.ton_rate_kopeks,
+        cost_kopeks=order.cost_kopeks,
         next_attempt_at=order.next_attempt_at,
+        processing_started_at=order.processing_started_at,
         updated_at=order.updated_at,
+        user_telegram_id=user.telegram_id if user else None,
+        user_username=user.username if user else None,
     )
 
 
 @router.get('/status', response_model=AdminStarsStatusResponse)
 async def get_status(_: User = Depends(require_permission('stars_shop:read'))) -> AdminStarsStatusResponse:
     config = shop.get_shop_config()
+    rate = await get_ton_rate()
     return AdminStarsStatusResponse(
         enabled=config.enabled,
         dry_run=bool(settings.STARS_SHOP_DRY_RUN),
@@ -78,7 +82,9 @@ async def get_status(_: User = Depends(require_permission('stars_shop:read'))) -
         min_quantity=config.min_quantity,
         max_quantity=config.max_quantity,
         presets=config.presets,
-        ton_rate_kopeks=int(settings.STARS_SHOP_TON_RATE_KOPEKS or 0),
+        ton_rate_kopeks=rate.kopeks if rate else None,
+        ton_rate_source=rate.source if rate else None,
+        wallet_low_stars=int(settings.STARS_SHOP_WALLET_LOW_STARS or 0),
     )
 
 
@@ -89,7 +95,7 @@ async def get_stats(
     db: AsyncSession = Depends(get_cabinet_db),
 ) -> AdminStarsStatsResponse:
     since = datetime.now(UTC) - timedelta(days=days) if days else None
-    stats = await shop.admin_stats(db, since=since)
+    stats = await shop.admin_stats(db, since=since, ton_rate=await get_ton_rate())
     return AdminStarsStatsResponse(
         orders_total=stats.orders_total,
         orders_completed=stats.orders_completed,
@@ -98,8 +104,11 @@ async def get_stats(
         refunded_kopeks=stats.refunded_kopeks,
         cost_nanoton=stats.cost_nanoton,
         margin_kopeks=stats.margin_kopeks,
+        cost_kopeks=stats.cost_kopeks,
         by_status=stats.by_status,
         needs_review=stats.by_status.get(StarsOrderStatus.NEEDS_REVIEW.value, 0),
+        ton_rate_kopeks=stats.ton_rate_kopeks,
+        ton_rate_source=stats.ton_rate_source,
     )
 
 
@@ -193,9 +202,11 @@ async def get_wallet(_: User = Depends(require_permission('stars_shop:read'))) -
             price = None
     except FragmentStarsError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    rate = await get_ton_rate()
     return AdminStarsWalletResponse(
         address=wallet.address,
         state=wallet.state,
         balance_ton=float(wallet.gram_balance),
         fragment_price_ton_per_100=price,
+        ton_rate_kopeks=rate.kopeks if rate else None,
     )

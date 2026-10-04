@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import structlog
-from sqlalchemy import func, or_, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,6 +28,7 @@ from app.database.models import (
     TransactionType,
     User,
 )
+from app.services.ton_rate_service import TonRate
 
 
 logger = structlog.get_logger(__name__)
@@ -146,6 +147,9 @@ class StarsShopStats:
     cost_nanoton: int
     margin_kopeks: int | None
     by_status: dict[str, int]
+    cost_kopeks: int | None = None
+    ton_rate_kopeks: int | None = None
+    ton_rate_source: str | None = None
 
 
 # ── Конфигурация и цена ─────────────────────────────────────────────────────
@@ -509,7 +513,7 @@ async def admin_list_orders(
     if status:
         query = query.where(StarsOrder.status == status)
     if search:
-        term = search.strip().lstrip('@')
+        term = search.strip().lstrip('@#')
         conditions = [StarsOrder.recipient_username.ilike(f'%{term}%')]
         if term.isdigit():
             conditions.append(StarsOrder.id == int(term))
@@ -520,13 +524,21 @@ async def admin_list_orders(
     return list(result.scalars().all()), int(total)
 
 
-async def admin_stats(db: AsyncSession, *, since: datetime | None = None) -> StarsShopStats:
+async def admin_stats(
+    db: AsyncSession,
+    *,
+    since: datetime | None = None,
+    ton_rate: TonRate | None = None,
+) -> StarsShopStats:
+    """Сводка за период. Себестоимость — по курсу на момент выдачи; у заказов без него —
+    по текущему курсу ``ton_rate``. Нет ни того, ни другого — маржа ``None``."""
     base = select(StarsOrder)
     if since is not None:
         base = base.where(StarsOrder.created_at >= since)
     sub = base.subquery()
     by_status_rows = (await db.execute(select(sub.c.status, func.count()).group_by(sub.c.status))).all()
     by_status = {status: int(count) for status, count in by_status_rows}
+    is_completed = sub.c.status == StarsOrderStatus.COMPLETED.value
     completed = (
         await db.execute(
             select(
@@ -534,7 +546,9 @@ async def admin_stats(db: AsyncSession, *, since: datetime | None = None) -> Sta
                 func.coalesce(func.sum(sub.c.quantity), 0),
                 func.coalesce(func.sum(sub.c.amount_kopeks), 0),
                 func.coalesce(func.sum(sub.c.cost_nanoton), 0),
-            ).where(sub.c.status == StarsOrderStatus.COMPLETED.value)
+                func.coalesce(func.sum(sub.c.cost_kopeks), 0),
+                func.coalesce(func.sum(case((sub.c.cost_kopeks.is_(None), sub.c.cost_nanoton), else_=0)), 0),
+            ).where(is_completed)
         )
     ).one()
     refunded = (
@@ -544,16 +558,26 @@ async def admin_stats(db: AsyncSession, *, since: datetime | None = None) -> Sta
             )
         )
     ).scalar_one()
+    revenue = int(completed[2])
     cost_nanoton = int(completed[3])
-    rate = int(settings.STARS_SHOP_TON_RATE_KOPEKS or 0)
-    margin = int(completed[2]) - cost_nanoton * rate // 1_000_000_000 if rate > 0 else None
+    known_cost_kopeks = int(completed[4])
+    unpriced_nanoton = int(completed[5])
+    if unpriced_nanoton == 0:
+        cost_kopeks: int | None = known_cost_kopeks
+    elif ton_rate is not None:
+        cost_kopeks = known_cost_kopeks + ton_rate.nanoton_to_kopeks(unpriced_nanoton)
+    else:
+        cost_kopeks = None
     return StarsShopStats(
         orders_total=sum(by_status.values()),
         orders_completed=int(completed[0]),
         stars_sold=int(completed[1]),
-        revenue_kopeks=int(completed[2]),
+        revenue_kopeks=revenue,
         refunded_kopeks=int(refunded),
         cost_nanoton=cost_nanoton,
-        margin_kopeks=margin,
+        margin_kopeks=revenue - cost_kopeks if cost_kopeks is not None else None,
         by_status=by_status,
+        cost_kopeks=cost_kopeks,
+        ton_rate_kopeks=ton_rate.kopeks if ton_rate else None,
+        ton_rate_source=ton_rate.source if ton_rate else None,
     )
