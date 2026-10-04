@@ -183,3 +183,41 @@ def build_order_keyboard(order_id: int) -> types.InlineKeyboardMarkup | None:
     return types.InlineKeyboardMarkup(
         inline_keyboard=[[types.InlineKeyboardButton(text=f'⭐ Заказ #{order_id} в кабинете', url=url)]]
     )
+
+
+def build_vpn_offer(user: User, texts) -> tuple[str, types.InlineKeyboardMarkup] | None:
+    """Предложение VPN после выдачи звёзд — тем, у кого нет активной платной подписки.
+
+    Ещё не пробовал — бесплатный триал, уже пробовал или платил — покупка.
+    ``user.subscriptions`` должен быть загружен.
+    """
+    if not settings.STARS_SHOP_VPN_OFFER_ENABLED:
+        return None
+    subscriptions = user.subscriptions or []
+    if any(sub.is_active and not sub.is_trial for sub in subscriptions):
+        return None
+    trial_available = (
+        settings.TRIAL_DURATION_DAYS > 0
+        and not settings.is_trial_disabled_for_user(user.auth_type)
+        and not user.is_trial_already_used()
+    )
+    if trial_available:
+        text = texts.t(
+            'STARS_SHOP_VPN_OFFER_TRIAL',
+            '🔐 Кстати, у нас есть VPN — попробуйте {days} дн. бесплатно.',
+        ).format(days=settings.TRIAL_DURATION_DAYS)
+        button = types.InlineKeyboardButton(
+            text=texts.t('STARS_SHOP_VPN_TRIAL_BUTTON', '🎁 Попробовать VPN бесплатно'), callback_data='menu_trial'
+        )
+    elif any(sub.is_active for sub in subscriptions):
+        # Идёт триал — не мешаем, человек и так пробует VPN.
+        return None
+    else:
+        text = texts.t(
+            'STARS_SHOP_VPN_OFFER_BUY',
+            '🔐 Кстати, у нас есть VPN — подключается за минуту.',
+        )
+        button = types.InlineKeyboardButton(
+            text=texts.t('STARS_SHOP_VPN_BUY_BUTTON', '🔐 Подключить VPN'), callback_data='menu_buy'
+        )
+    return text, types.InlineKeyboardMarkup(inline_keyboard=[[button]])

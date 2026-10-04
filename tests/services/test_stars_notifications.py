@@ -116,3 +116,63 @@ def test_no_cabinet_links_without_real_cabinet_url(monkeypatch):
     _, markup = build_completed_message(_order(), buyer=_buyer(), rate=None, wallet=None)
     assert not any('example.com' in url for url in _urls(markup))
     assert build_order_keyboard(1) is None
+
+
+# ── Предложение VPN после выдачи звёзд ─────────────────────────────────────
+
+
+class _Texts:
+    @staticmethod
+    def t(_key: str, default: str) -> str:
+        return default
+
+
+def _sub(*, active: bool, trial: bool = False):
+    from app.database.models import Subscription
+
+    now = datetime.now(UTC)
+    return Subscription(
+        status='active' if active else 'expired',
+        is_trial=trial,
+        end_date=now + timedelta(days=5) if active else now - timedelta(days=5),
+    )
+
+
+@pytest.fixture
+def _trial(monkeypatch):
+    monkeypatch.setattr(settings, 'STARS_SHOP_VPN_OFFER_ENABLED', True)
+    monkeypatch.setattr(settings, 'TRIAL_DURATION_DAYS', 3)
+    monkeypatch.setattr(settings, 'TRIAL_DISABLED_FOR', 'none')
+
+
+def _callback(offer) -> str:
+    return offer[1].inline_keyboard[0][0].callback_data
+
+
+def test_vpn_offer_trial_for_newcomer(_trial):
+    from app.services.stars_notifications import build_vpn_offer
+
+    offer = build_vpn_offer(_buyer(subscriptions=[], has_had_paid_subscription=False), _Texts())
+    assert _callback(offer) == 'menu_trial'
+    assert '3 дн. бесплатно' in offer[0]
+
+
+def test_vpn_offer_buy_after_trial_or_expired_paid(_trial):
+    from app.services.stars_notifications import build_vpn_offer
+
+    used_trial = _buyer(subscriptions=[_sub(active=False, trial=True)], has_had_paid_subscription=False)
+    lapsed = _buyer(subscriptions=[_sub(active=False)], has_had_paid_subscription=True)
+    assert _callback(build_vpn_offer(used_trial, _Texts())) == 'menu_buy'
+    assert _callback(build_vpn_offer(lapsed, _Texts())) == 'menu_buy'
+
+
+def test_no_vpn_offer_for_subscribers_or_when_disabled(_trial, monkeypatch):
+    from app.services.stars_notifications import build_vpn_offer
+
+    paid = _buyer(subscriptions=[_sub(active=True)], has_had_paid_subscription=True)
+    on_trial = _buyer(subscriptions=[_sub(active=True, trial=True)], has_had_paid_subscription=False)
+    assert build_vpn_offer(paid, _Texts()) is None
+    assert build_vpn_offer(on_trial, _Texts()) is None
+
+    monkeypatch.setattr(settings, 'STARS_SHOP_VPN_OFFER_ENABLED', False)
+    assert build_vpn_offer(_buyer(subscriptions=[], has_had_paid_subscription=False), _Texts()) is None

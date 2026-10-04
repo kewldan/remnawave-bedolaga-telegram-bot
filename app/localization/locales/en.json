@@ -2350,5 +2350,9 @@
   "STARS_SHOP_STATUS_COMPLETED": "delivered",
   "STARS_SHOP_STATUS_FAILED": "error",
   "STARS_SHOP_STATUS_REFUNDED": "refunded",
-  "STARS_SHOP_STATUS_NEEDS_REVIEW": "under review"
+  "STARS_SHOP_STATUS_NEEDS_REVIEW": "under review",
+  "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 By the way, we also have a VPN — try it free for {days} days.",
+  "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 Try VPN for free",
+  "STARS_SHOP_VPN_OFFER_BUY": "🔐 By the way, we also have a VPN — set up in a minute.",
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 Get VPN"
 }
