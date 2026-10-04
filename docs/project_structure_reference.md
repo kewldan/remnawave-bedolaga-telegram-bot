@@ -89,7 +89,7 @@
   Функции: `create_bot` — Create a Bot instance with SOCKS5 proxy and/or custom Telegram API server.
 - `app/cabinet/`
 - `app/config.py` — Python-модуль
-  Классы: `Settings` (414 методов)
+  Классы: `Settings` (416 методов)
   Функции: `transliterate_cyrillic` — Заменяет кириллические буквы латинскими, сохраняя регистр («Шмель» → «Shmel»)., `set_period_prices_from_db` — Устанавливает периоды/цены из БД., `get_db_period_prices` — Возвращает периоды/цены из БД если они загружены., `clear_db_period_prices` — Очищает кеш цен из тарифов (при переключении в classic mode)., `refresh_period_prices` — Rebuild cached period price mapping., `refresh_classic_period_prices` — Rebuild CLASSIC_PERIOD_PRICES from current settings., `get_traffic_prices`, `refresh_traffic_prices`
 - `app/database/`
 - `app/external/`
@@ -109,7 +109,7 @@
   Функции: нет
 - `app/services/`
 - `app/states.py` — Python-модуль
-  Классы: `RegistrationStates`, `SubscriptionStates`, `GiftPurchaseStates`, `GiftActivationStates`, `BalanceStates`, `PromoCodeStates`, `AdminStates`, `SupportStates`, `TicketStates`, `AdminTicketStates`, `SupportSettingsStates`, `BotConfigStates`, `PricingStates`, `AutoPayStates`, `SquadCreateStates`, `SquadRenameStates`, `SquadMigrationStates`, `RemnaWaveSyncStates`, `ContestStates`, `AdminSubmenuStates`, `BlacklistStates`, `ReferralWithdrawalStates`
+  Классы: `RegistrationStates`, `SubscriptionStates`, `GiftPurchaseStates`, `StarsShopStates`, `GiftActivationStates`, `BalanceStates`, `PromoCodeStates`, `AdminStates`, `SupportStates`, `TicketStates`, `AdminTicketStates`, `SupportSettingsStates`, `BotConfigStates`, `PricingStates`, `AutoPayStates`, `SquadCreateStates`, `SquadRenameStates`, `SquadMigrationStates`, `RemnaWaveSyncStates`, `ContestStates`, `AdminSubmenuStates`, `BlacklistStates`, `ReferralWithdrawalStates`
   Функции: нет
 - `app/tools/`
 - `app/utils/`
@@ -294,6 +294,9 @@
 - `app/cabinet/routes/admin_settings.py` — Python-модуль
   Классы: `SettingCategoryRef`, `SettingCategorySummary`, `SettingChoice`, `SettingHint`, `SettingDefinition`, `SettingUpdateRequest`
   Функции: `list_categories` — Get list of setting categories., `list_settings` — Get list of all settings or settings for a specific category., `get_setting` — Get a specific setting by key., `update_setting` — Update a setting value., `reset_setting` — Reset a setting to its default value.
+- `app/cabinet/routes/admin_stars_shop.py` — Python-модуль
+  Классы: нет
+  Функции: `get_status`, `get_stats`, `list_orders`, `get_order`, `retry_order`, `refund_order`, `mark_completed`, `get_wallet`
 - `app/cabinet/routes/admin_stats.py` — Python-модуль
   Классы: `NodeStatus`, `NodesOverview`, `RevenueData`, `SubscriptionStats`, `FinancialStats`, `ServerStats`, `TariffStatItem`, `TariffStats`, `DashboardStats`, `SystemInfoResponse`, `TopReferrerItem`, `TopReferrersResponse`, `TopCampaignItem`, `TopCampaignsResponse`, `RecentPaymentItem`, `RecentPaymentsResponse`
   Функции: `get_dashboard_stats` — Get complete dashboard statistics for admin panel., `get_system_info` — Get system information for admin dashboard., `get_nodes_status` — Get status of all nodes., `restart_node` — Restart a node., `toggle_node` — Enable or disable a node., `get_top_referrers` — Get top referrers with earnings breakdown by period., `get_top_campaigns` — Get top advertising campaigns with statistics., `get_recent_payments` — Get recent payments with user info.
@@ -387,6 +390,9 @@
 - `app/cabinet/routes/site_verification.py` — Python-модуль
   Классы: нет
   Функции: `get_site_verification` — Return all configured site-verification tokens.
+- `app/cabinet/routes/stars_shop.py` — Python-модуль
+  Классы: нет
+  Функции: `order_to_response`, `get_stars_config`, `get_stars_quote`, `purchase_stars`, `list_stars_orders`, `get_stars_order`
 - `app/cabinet/routes/subscription.py` — Python-модуль
   Классы: нет
   Функции: `get_subscription`
@@ -538,6 +544,9 @@
 - `app/cabinet/schemas/servers.py` — Python-модуль
   Классы: `PromoGroupInfo`, `ServerListItem`, `ServerListResponse`, `ServerDetailResponse`, `ServerUpdateRequest`, `ServerToggleResponse`, `ServerTrialToggleResponse`, `ServerStatsResponse`, `ServerSyncResponse`, `ServerSyncRequest`
   Функции: нет
+- `app/cabinet/schemas/stars_shop.py` — Python-модуль
+  Классы: `StarsShopConfigResponse`, `StarsQuoteResponse`, `StarsPurchaseRequest`, `StarsOrderResponse`, `StarsPurchaseResponse`, `StarsOrdersListResponse`, `AdminStarsOrderResponse`, `AdminStarsOrdersListResponse`, `AdminStarsStatsResponse`, `AdminStarsStatusResponse`, `AdminStarsWalletResponse`, `AdminMarkCompletedRequest`, `AdminRefundRequest`
+  Функции: нет
 - `app/cabinet/schemas/subscription.py` — Python-модуль
   Классы: `ServerInfo`, `TrafficPurchaseInfo`, `SubscriptionData`, `SubscriptionStatusResponse`, `RenewalOptionResponse`, `RenewalRequest`, `TrafficPackageResponse`, `TrafficPurchaseRequest`, `DevicePurchaseRequest`, `AutopayUpdateRequest`, `TrialActivateRequest`, `TrialInfoResponse`, `PurchaseSelectionRequest`, `PurchasePreviewRequest`, `TariffPurchaseRequest`
   Функции: нет
@@ -642,7 +651,7 @@
   Классы: нет
   Функции: `run_alembic_upgrade` — Run ``alembic upgrade head``, handling fresh and legacy databases., `stamp_alembic_head` — Stamp the DB as being at head without running migrations (for existing DBs).
 - `app/database/models.py` — Python-модуль
-  Классы: `AwareDateTime` (2 методов), `UserStatus`, `SubscriptionStatus`, `TransactionType`, `PromoCodeType`, `PaymentMethod`, `MainMenuButtonActionType`, `MainMenuButtonVisibility`, `WheelPrizeType`, `WheelSpinPaymentType`, `YooKassaPayment` (6 методов), `SavedPaymentMethod` (1 методов), `CryptoBotPayment` (5 методов), `AppleTransaction` (2 методов), `AppleIAPAccount` (1 методов), `AppleNotification` (1 методов), `AppleIAPAbuseEvent` (1 методов), `HeleketPayment` (5 методов), `MulenPayPayment` (2 методов), `Pal24Payment` (3 методов), `WataPayment` (2 методов), `PlategaPayment` (2 методов), `PlategaSubscription` (1 методов), `LavaSubscription` (1 методов), `CasheraSubscription` (1 методов), `CloudPaymentsPayment` (5 методов), `FreekassaPayment` (5 методов), `KassaAiPayment` (5 методов), `RioPayPayment` (5 методов), `SeverPayPayment` (5 методов), `PayPearPayment` (5 методов), `RollyPayPayment` (5 методов), `OverpayPayment` (5 методов), `AuraPayPayment` (5 методов), `EtoplatezhiPayment` (5 методов), `AntilopayPayment` (5 методов), `JupiterPayment` (5 методов), `DonutPayment` (5 методов), `LavaPayment` (5 методов), `CisPayPayment` (5 методов), `CasheraPayment` (5 методов), `TabPayPayment` (5 методов), `ParityPayPayment` (5 методов), `PromoGroup` (3 методов), `UserPromoGroup` (1 методов), `Tariff` (21 методов), `PartnerStatus`, `User` (12 методов), `Subscription` (15 методов), `GraceAccessSessionModel`, `TrafficPurchase` (1 методов), `Transaction` (1 методов), `SubscriptionConversion` (2 методов), `PromoCode` (2 методов), `PromoCodeUse`, `CouponStatus`, `CouponBatch` (2 методов), `Coupon` (1 методов), `ReferralRewardType`, `ReferralRewardTrigger`, `ReferralRewardMode`, `ReferralRewardLevel` (1 методов), `ReferralEarning` (1 методов), `WithdrawalRequestStatus`, `WithdrawalRequest` (1 методов), `PartnerApplication`, `ReferralContest` (1 методов), `ReferralContestEvent` (1 методов), `ReferralContestVirtualParticipant` (1 методов), `ContestTemplate`, `ContestRound`, `ContestAttempt`, `Squad` (1 методов), `ServiceRule`, `PrivacyPolicy`, `PublicOffer`, `LegalConsent`, `RecurrentPayments`, `FaqSetting`, `FaqPage`, `SystemSetting`, `EmailTemplate`, `MonitoringLog`, `SentNotification`, `SubscriptionEvent`, `DiscountOffer`, `PromoOfferTemplate`, `SubscriptionTemporaryAccess`, `PromoOfferLog`, `BroadcastHistory`, `Poll`, `PollQuestion`, `PollOption`, `PollResponse`, `PollAnswer`, `ServerSquad` (3 методов), `SubscriptionServer`, `SupportAuditLog`, `UserMessage` (1 методов), `WelcomeText`, `PinnedMessage`, `AdvertisingCampaign` (4 методов), `AdvertisingCampaignRegistration` (1 методов), `TicketStatus`, `Ticket` (8 методов), `TicketMessage` (3 методов), `WebApiToken` (1 методов), `MainMenuButton` (3 методов), `MenuLayoutHistory` (1 методов), `ButtonClickLog` (1 методов), `Webhook` (1 методов), `WebhookDelivery` (1 методов), `CabinetRefreshToken` (4 методов), `WheelConfig` (1 методов), `WheelPrize` (1 методов), `WheelSpin` (3 методов), `TicketNotification` (1 методов), `PaymentMethodConfig` (1 методов), `RequiredChannel` (1 методов), `UserChannelSubscription` (1 методов), `AdminRole` (1 методов), `UserRole` (1 методов), `AccessPolicy` (1 методов), `AdminAuditLog` (1 методов), `LandingPage` (1 методов), `GuestPurchaseStatus`, `GuestPurchase` (1 методов), `NewsArticle` (1 методов), `NewsCategory` (1 методов), `NewsTag` (1 методов), `YandexClientIdMap`, `InfoPage`, `UserDeviceAlias`, `SystemErrorEvent`, `EmailQueueItem`, `ReachabilityBatch`, `ReachabilityJob`, `ReachabilityLeg`, `ReachabilityTargetPref`, `DpiCheckerAction`, `UserReminder` (1 методов), `UserReminderState`
+  Классы: `AwareDateTime` (2 методов), `UserStatus`, `SubscriptionStatus`, `TransactionType`, `PromoCodeType`, `PaymentMethod`, `MainMenuButtonActionType`, `MainMenuButtonVisibility`, `WheelPrizeType`, `WheelSpinPaymentType`, `YooKassaPayment` (6 методов), `SavedPaymentMethod` (1 методов), `CryptoBotPayment` (5 методов), `AppleTransaction` (2 методов), `AppleIAPAccount` (1 методов), `AppleNotification` (1 методов), `AppleIAPAbuseEvent` (1 методов), `HeleketPayment` (5 методов), `MulenPayPayment` (2 методов), `Pal24Payment` (3 методов), `WataPayment` (2 методов), `PlategaPayment` (2 методов), `PlategaSubscription` (1 методов), `LavaSubscription` (1 методов), `CasheraSubscription` (1 методов), `CloudPaymentsPayment` (5 методов), `FreekassaPayment` (5 методов), `KassaAiPayment` (5 методов), `RioPayPayment` (5 методов), `SeverPayPayment` (5 методов), `PayPearPayment` (5 методов), `RollyPayPayment` (5 методов), `OverpayPayment` (5 методов), `AuraPayPayment` (5 методов), `EtoplatezhiPayment` (5 методов), `AntilopayPayment` (5 методов), `JupiterPayment` (5 методов), `DonutPayment` (5 методов), `LavaPayment` (5 методов), `CisPayPayment` (5 методов), `CasheraPayment` (5 методов), `TabPayPayment` (5 методов), `ParityPayPayment` (5 методов), `PromoGroup` (3 методов), `UserPromoGroup` (1 методов), `Tariff` (21 методов), `PartnerStatus`, `User` (12 методов), `Subscription` (15 методов), `GraceAccessSessionModel`, `TrafficPurchase` (1 методов), `Transaction` (1 методов), `SubscriptionConversion` (2 методов), `PromoCode` (2 методов), `PromoCodeUse`, `CouponStatus`, `CouponBatch` (2 методов), `Coupon` (1 методов), `ReferralRewardType`, `ReferralRewardTrigger`, `ReferralRewardMode`, `ReferralRewardLevel` (1 методов), `ReferralEarning` (1 методов), `WithdrawalRequestStatus`, `WithdrawalRequest` (1 методов), `PartnerApplication`, `ReferralContest` (1 методов), `ReferralContestEvent` (1 методов), `ReferralContestVirtualParticipant` (1 методов), `ContestTemplate`, `ContestRound`, `ContestAttempt`, `Squad` (1 методов), `ServiceRule`, `PrivacyPolicy`, `PublicOffer`, `LegalConsent`, `RecurrentPayments`, `FaqSetting`, `FaqPage`, `SystemSetting`, `EmailTemplate`, `MonitoringLog`, `SentNotification`, `SubscriptionEvent`, `DiscountOffer`, `PromoOfferTemplate`, `SubscriptionTemporaryAccess`, `PromoOfferLog`, `BroadcastHistory`, `Poll`, `PollQuestion`, `PollOption`, `PollResponse`, `PollAnswer`, `ServerSquad` (3 методов), `SubscriptionServer`, `SupportAuditLog`, `UserMessage` (1 методов), `WelcomeText`, `PinnedMessage`, `AdvertisingCampaign` (4 методов), `AdvertisingCampaignRegistration` (1 методов), `TicketStatus`, `Ticket` (8 методов), `TicketMessage` (3 методов), `WebApiToken` (1 методов), `MainMenuButton` (3 методов), `MenuLayoutHistory` (1 методов), `ButtonClickLog` (1 методов), `Webhook` (1 методов), `WebhookDelivery` (1 методов), `CabinetRefreshToken` (4 методов), `WheelConfig` (1 методов), `WheelPrize` (1 методов), `WheelSpin` (3 методов), `TicketNotification` (1 методов), `PaymentMethodConfig` (1 методов), `RequiredChannel` (1 методов), `UserChannelSubscription` (1 методов), `AdminRole` (1 методов), `UserRole` (1 методов), `AccessPolicy` (1 методов), `AdminAuditLog` (1 методов), `LandingPage` (1 методов), `GuestPurchaseStatus`, `GuestPurchase` (1 методов), `NewsArticle` (1 методов), `NewsCategory` (1 методов), `NewsTag` (1 методов), `YandexClientIdMap`, `InfoPage`, `UserDeviceAlias`, `SystemErrorEvent`, `EmailQueueItem`, `ReachabilityBatch`, `ReachabilityJob`, `ReachabilityLeg`, `ReachabilityTargetPref`, `DpiCheckerAction`, `UserReminder` (1 методов), `UserReminderState`, `StarsOrderStatus`, `StarsOrder` (1 методов)
   Функции: нет
 
 #### app/database/crud
@@ -908,6 +917,7 @@
 - `app/external/dpichecker_api.py` — Python-модуль
   Классы: `DpiCheckerAPIError` (1 методов), `DpiCheckerGatewayError`, `DpiCheckerAPI` (40 методов)
   Функции: нет
+- `app/external/fragment/`
 - `app/external/heleket.py` — Python-модуль
   Классы: `HeleketService` (9 методов)
   Функции: нет
@@ -938,6 +948,50 @@
 - `app/external/yookassa_webhook.py` — Python-модуль
   Классы: `YooKassaWebhookHandler` (5 методов)
   Функции: `collect_yookassa_ip_candidates`, `resolve_webhook_client_ip` — Адрес отправителя вебхука без доверия к заголовкам, которые мог выставить сам клиент., `is_yookassa_ip_allowed`, `create_yookassa_webhook_app`, `start_yookassa_webhook_server`
+
+#### app/external/fragment
+
+- `app/external/fragment/NOTICE.md` — файл
+- `app/external/fragment/__init__.py` — Python-модуль
+  Классы: нет
+  Функции: нет
+- `app/external/fragment/_vendor/`
+- `app/external/fragment/client.py` — Python-модуль
+  Классы: `FragmentStarsError`, `FragmentConfigurationError`, `FragmentRecipientNotFoundError`, `FragmentRetryableError`, `FragmentBroadcastUncertainError` (1 методов), `StarsQuote`, `StarsPurchaseReceipt`, `FragmentStarsClient` (7 методов)
+  Функции: `parse_cookies` — Принимает cookies строкой ``k=v; k2=v2``, JSON-объектом или словарём.
+
+##### app/external/fragment/_vendor
+
+- `app/external/fragment/_vendor/__init__.py` — Python-модуль
+  Классы: нет
+  Функции: нет
+- `app/external/fragment/_vendor/constants.py` — Python-модуль
+  Классы: нет
+  Функции: нет
+- `app/external/fragment/_vendor/decoder.py` — Python-модуль
+  Классы: нет
+  Функции: `decode_boc_comment` — Decode a base64-encoded BOC payload to a plain-text comment or raw Cell.
+- `app/external/fragment/_vendor/exceptions.py` — Python-модуль
+  Классы: `FragmentError`, `ClientError`, `ConfigurationError`, `CookieError`, `FragmentAPIError`, `FragmentPageError`, `UserNotFoundError`, `AlreadySubscribedError`, `AnonymousNumberError`, `TransactionError`, `PaidMessageLimitError`, `ConfirmationTimeout`, `SeqnoError`, `ParseError`, `VerificationError`, `OperationError`, `WalletError`, `UnexpectedError`, `RetryExhaustedError`, `SessionStorageError`
+  Функции: нет
+- `app/external/fragment/_vendor/html.py` — Python-модуль
+  Классы: нет
+  Функции: `parse_stars_packages` — Parse stars package prices from stars page HTML., `parse_stars_price_from_html` — Parse GRAM and USD price from inline HTML fragment.
+- `app/external/fragment/_vendor/http.py` — Python-модуль
+  Классы: нет
+  Функции: `build_headers` — Build HTTP headers for a specific Fragment page., `fetch_page_ajax` — Fetch a Fragment page via AJAX navigation with automatic retry., `fetch_fragment_hash` — Fetch the API hash from Fragment homepage with caching and retry., `post_fragment_api` — POST a request to the Fragment API with automatic retry.
+- `app/external/fragment/_vendor/models.py` — Python-модуль
+  Классы: `FragmentBaseModel`, `TransactionResult` (1 методов), `WalletInfo` (3 методов), `RecipientInfo` (1 методов), `PurchaseResult` (1 методов), `StarsPrice` (1 методов), `StarsPrices` (1 методов)
+  Функции: нет
+- `app/external/fragment/_vendor/proxy.py` — Python-модуль
+  Классы: нет
+  Функции: `parse_proxy` — Parse a proxy URL string into components., `build_curl_proxy_args` — Build proxy keyword arguments for curl_cffi sessions.
+- `app/external/fragment/_vendor/retry.py` — Python-модуль
+  Классы: нет
+  Функции: `with_retry` — Decorator that retries an async function with exponential backoff.
+- `app/external/fragment/_vendor/wallet.py` — Python-модуль
+  Классы: нет
+  Функции: `execute_transaction` — Execute a TON transaction with full balance check and confirmation., `execute_batch_transaction` — Execute a batched TON transaction with multiple inline messages., `build_account_info` — Build wallet account info dict for Fragment API requests., `fetch_wallet_info` — Fetch full wallet information including GRAM and USDT balances.
 
 ### app/handlers
 
@@ -982,6 +1036,9 @@
 - `app/handlers/stars_payments.py` — Python-модуль
   Классы: нет
   Функции: `handle_pre_checkout_query`, `handle_successful_payment`, `register_stars_handlers`
+- `app/handlers/stars_shop.py` — Python-модуль
+  Классы: нет
+  Функции: `handle_stars_menu`, `handle_stars_to_self`, `handle_stars_to_other`, `handle_recipient_input`, `handle_quantity_preset`, `handle_quantity_custom`, `handle_quantity_input`, `handle_pay`, `handle_return_to_cart` — Вернуться к сохранённому заказу (например, после пополнения без автопокупки)., `handle_my_orders`, `register_handlers`
 - `app/handlers/start.py` — Python-модуль
   Классы: нет
   Функции: `answer_menu_with_media` — Отвечает меню с медиа-шапкой на входящее сообщение (например, /start)., `send_menu_with_media` — Отправляет меню с медиа-шапкой: видео → фото-логотип → обычный текст., `handle_potential_referral_code`, `cmd_start`, `process_language_selection`, `process_rules_accept` — Обрабатывает принятие или отклонение правил пользователем., `process_privacy_policy_accept`, `process_referral_code_input`, `process_referral_code_skip`, `complete_registration_from_callback`, `complete_registration`, `get_referral_code_keyboard`, `get_main_menu_text`, `get_main_menu_text_simple`, `required_sub_channel_check`, `process_webauth_confirm` — Handle web auth confirmation or denial., `register_handlers`
@@ -1795,6 +1852,15 @@
 - `app/services/severpay_service.py` — Python-модуль
   Классы: `SeverPayAPIError` (1 методов), `SeverPayService` (9 методов)
   Функции: нет
+- `app/services/stars_cart_service.py` — Python-модуль
+  Классы: нет
+  Функции: `auto_purchase_stars_cart` — Купить звёзды из корзины после пополнения. ``True`` — заказ оплачен.
+- `app/services/stars_fulfillment_service.py` — Python-модуль
+  Классы: `StarsFulfillmentService` (17 методов)
+  Функции: `build_fragment_client` — Клиент Fragment из настроек; ``FragmentConfigurationError``, если чего-то не хватает.
+- `app/services/stars_shop_service.py` — Python-модуль
+  Классы: `StarsShopError`, `StarsShopDisabledError`, `StarsQuantityError` (1 методов), `StarsRecipientError`, `StarsPurchaseRestrictedError`, `StarsInsufficientBalanceError` (2 методов), `StarsPriceChangedError` (1 методов), `StarsIdempotencyConflictError`, `StarsOrderStateError`, `StarsShopConfig`, `StarsQuote`, `StarsPurchaseResult`, `StarsShopStats`
+  Функции: `get_shop_config`, `is_shop_available` — Магазин виден пользователям: включён и выдача настроена (или тестовый режим)., `normalize_recipient` — Ник получателя без ``@`` и ссылки ``t.me/``; бросает ``StarsRecipientError``., `quote_stars` — Цена за ``quantity`` звёзд по текущим настройкам., `purchase_stars_from_balance` — Списывает деньги и создаёт заказ в статусе ``paid`` атомарно и идемпотентно., `build_stars_cart` — Корзина для «пополнить недостающее и купить автоматически»., `refund_order` — Возвращает деньги на баланс. Допустимо из ``paid``, ``failed``, ``needs_review``., `admin_retry_order` — Снова поставить в очередь заказ из ``failed`` или после ручной проверки ``needs_review``., `admin_mark_completed` — Закрыть ``needs_review``: админ убедился, что звёзды дошли., `list_user_orders`, `get_user_order`, `admin_list_orders`, `admin_stats`
 - `app/services/start_media_service.py` — Python-модуль
   Классы: нет
   Функции: `get_start_video_file_id` — file_id видео для стартового меню либо None., `set_start_video_file_id` — Сохраняет (или очищает) file_id видео стартового меню., `reset_start_video_cache` — Сбрасывает кеш (для тестов и ручной инвалидации).
@@ -2673,6 +2739,7 @@
 - `docs/postgresql-18-upgrade.md` — файл
 - `docs/project_structure_reference.md` — файл
 - `docs/referral_program_setting.md` — файл
+- `docs/telegram-stars-shop.md` — файл
 - `docs/web-admin-integration-guide.md` — файл
 - `docs/web-admin-integration.md` — файл
 - `docs/websocket-and-webhooks.md` — файл
@@ -3087,6 +3154,9 @@
   Классы: нет
   Функции: `upgrade`, `downgrade`
 - `migrations/alembic/versions/0131_add_cashera_subscriptions.py` — Python-модуль
+  Классы: нет
+  Функции: `upgrade`, `downgrade`
+- `migrations/alembic/versions/0132_create_stars_orders.py` — Python-модуль
   Классы: нет
   Функции: `upgrade`, `downgrade`
 
@@ -3581,6 +3651,9 @@
 - `tests/cabinet/test_squad_name_validation.py` — Python-модуль
   Классы: нет
   Функции: `test_limits_match_panel_contract`, `test_helper_rejects_names_the_panel_rejects`, `test_helper_accepts_panel_valid_names`, `test_create_schemas_reject_invalid_names`, `test_update_schemas_reject_invalid_names`, `test_rename_action_rejects_invalid_names`, `test_schemas_accept_panel_valid_names`, `test_update_and_action_still_allow_omitting_name`
+- `tests/cabinet/test_stars_shop_routes.py` — Python-модуль
+  Классы: нет
+  Функции: `test_stars_routes_registered`, `test_stars_permissions_registered`, `test_fragment_secrets_are_never_editable_from_settings_api`, `test_config_hides_shop_without_fulfillment`, `test_purchase_success_maps_order`, `test_insufficient_balance_saves_cart_and_returns_402`, `test_purchase_errors_map_to_http`, `test_purchase_is_rate_limited`, `test_user_sees_only_own_order`, `test_admin_state_errors_become_409`, `test_admin_list_rejects_unknown_status`, `test_admin_wallet_reports_missing_configuration`
 - `tests/cabinet/test_subscription_requires_tariff_flag.py` — Python-модуль
   Классы: нет
   Функции: `tariffs_mode`, `classic_mode`, `test_paid_subscription_without_tariff_requires_tariff`, `test_subscription_with_tariff_does_not_require_tariff`, `test_trial_without_tariff_does_not_require_tariff` — Пробная подписка идёт своим путём (покупка тарифа), признак — только для платных., `test_classic_mode_never_requires_tariff`, `test_list_item_carries_the_flag_for_paid_subscription_without_tariff` — Список подписок (мультитариф) тоже говорит кабинету, что подписке нужен тариф.
@@ -3882,6 +3955,9 @@
 - `tests/external/test_dpichecker_api.py` — Python-модуль
   Классы: нет
   Функции: `test_error_codes_come_from_body`, `test_rejected_inputs_are_kept`, `test_429_carries_retry_after`, `test_5xx_without_json_is_gateway`, `test_success_body_returned_as_is`, `test_idempotency_key_only_on_paid_post`, `test_key_sent_in_x_api_key_header`, `test_unknown_check_type_refused_before_network`, `test_methods_hit_expected_paths`, `test_wait_timeout_clamped_to_service_limit`, `test_cheremsha_joins_resources`, `test_long_poll_gets_its_own_longer_timeout`, `test_default_session_timeout_is_short`, `test_account_list_passes_only_given_filters`, `test_report_json_asks_json_format`, `test_deliveries_paged`
+- `tests/external/test_fragment_stars_client.py` — Python-модуль
+  Классы: нет
+  Функции: `fragment_io`, `test_parse_cookies_string_and_json`, `test_configuration_errors`, `test_purchase_calls_before_broadcast_before_sending`, `test_unknown_recipient_and_kyc`, `test_send_errors_are_classified_by_money_risk`, `test_failed_confirm_req_does_not_fail_paid_purchase`, `test_quantity_bounds_checked_before_any_request`, `test_vendored_broadcast_never_resends_after_ambiguous_error` — Патч к fragment-api-py 12.1.0: повтор отправки только при 429 (см. NOTICE.md)., `test_vendored_broadcast_retries_rate_limit`
 - `tests/external/test_remnawave_3_0_0.py` — Python-модуль
   Классы: нет
   Функции: `test_coerce_panel_user_id_accepts_ints_and_digit_strings`, `test_coerce_panel_user_id_rejects_everything_else` — Мусорный идентификатор обязан падать на границе клиента, а не уходить в панель:, `test_invalid_user_id_error_is_a_remnawave_api_error` — Вызывающий код ловит RemnaWaveAPIError — новый тип не должен пролетать мимо., `test_is_user_not_found_error_recognises_only_real_absence`, `test_is_user_not_found_error_never_true_for_invalid_local_id` — Битая ссылка в БД бота — это баг данных, а не «в панели нет пользователя»., `test_parsed_user_has_numeric_id_and_no_uuid_field` — 3.0.0 удалил ``uuid`` из UsersSchema — датакласс не должен его воскрешать., `test_get_user_by_id_uses_numeric_path`, `test_get_user_by_id_rejects_uuid_before_any_request`, `test_update_user_body_is_keyed_on_id_not_uuid` — UpdateUserCommand.RequestBodySchema в 3.0.0 не имеет поля ``uuid``: zod срежет, `test_update_user_coerces_digit_string_id_to_number`, `test_update_user_rejects_uuid_before_any_request`, `test_user_actions_are_addressed_by_numeric_id`, `test_resolve_user_sends_exactly_one_identifier`, `test_resolve_user_rejects_zero_or_multiple_identifiers` — Панель требует ровно одно поле — отсекаем локально, не тратя запрос на 400., `test_resolve_user_returns_none_when_panel_has_no_such_user`, `test_resolve_user_propagates_non_not_found_errors` — 400 — это отказ панели обработать запрос, а не «пользователя нет»:, `test_resolve_user_returns_none_on_empty_response_envelope`, `test_extend_user_expiration_sends_days_body`, `test_extend_user_expiration_requires_at_least_one_day` — days < 1 панель отвергнет валидацией — запрос не отправляем вовсе., `test_extend_user_expiration_rejects_uuid_before_any_request`, `test_remove_device_body_uses_numeric_user_id_not_user_uuid` — 2.8.0 переименовал ``userUuid`` -> ``userId`` в HWID-командах, 3.0.0 сделал его, `test_remove_device_coerces_digit_string_user_id`, `test_remove_device_with_uuid_fails_without_touching_panel` — Протухший uuid в БД бота: сообщаем о неудаче, но не шлём заведомо битый запрос., `test_reset_user_devices_uses_single_delete_all_call` — Раньше это был цикл из N удалений с эвристикой «успех, если упало меньше, `test_reset_user_devices_with_uuid_fails_without_touching_panel`, `test_get_user_devices_is_addressed_by_numeric_id`, `test_delete_user_returns_true_on_empty_body` — 3.0.0: DELETE отвечает 204 (синхронно) либо 202 (в очередь) — тела нет,, `test_empty_body_actions_return_true_without_reading_response` — Bulk-операции сквадов, удаление сквада и рестарт ноды выполняются в фоне:, `test_add_many_users_sends_numeric_ids`, `test_add_many_users_rejects_invalid_ids_before_request`, `test_bulk_squad_actions_skip_request_for_empty_id_list`, `test_restart_node_sends_force_restart_body_default_false`, `test_restart_node_forwards_force_restart_true`, `test_restart_all_nodes_sends_force_restart_body`, `test_users_page_stream_omits_cursor_on_first_page`, `test_users_page_stream_passes_cursor_when_given`, `test_users_page_stream_keeps_cursor_as_string` — Запрос коерсит курсор в число (z.coerce.number), а ответ отдаёт его строкой —, `test_users_page_stream_clamps_size_to_panel_contract` — Контракт панели (zod): size строго 1..1000, иначе 400 «Validation failed», `test_users_stream_follows_cursor_until_exhausted`, `test_users_stream_stops_when_next_cursor_is_null_even_if_has_more_true` — Defensive: a null nextCursor terminates the scan regardless of hasMore., `test_find_users_by_telegram_id_filters_in_query_string` — ``GET /api/users/by-telegram-id/{id}`` удалён — поиск живёт в query-фильтре, `test_find_users_by_email_filters_in_query_string` — ``GET /api/users/by-email/{email}`` удалён — тот же query-фильтр стрима., `test_find_users_passes_all_supported_filters`, `test_find_users_sends_no_filters_when_none_given`, `test_find_users_follows_cursor_and_honours_max_results`, `test_find_users_stops_early_once_max_results_reached`, `test_happ_encrypt_404_disables_panel_endpoint_and_falls_back` — 2.8.0 removed POST /api/system/tools/happ/encrypt → 404 must disable further, `test_happ_encrypt_non_404_error_keeps_endpoint_enabled` — A transient 5xx must NOT permanently disable happ-encrypt (only a 404 = removed)., `test_happ_api_fallback_caches_by_subscription_url` — The client is recreated per request — the crypt5 cache must live on the class, `test_happ_api_fallback_cooldown_after_failure` — A Happ API outage must not stall hot paths — one failure pauses further calls., `test_happ_api_fallback_rejects_unexpected_payload_per_url` — A non-happ:// body is a per-URL problem: never cached as a link, never retried,, `test_happ_api_fallback_4xx_does_not_poison_global_cooldown` — A 4xx rejection of one URL must not disable the fallback for everyone., `test_happ_api_fallback_429_arms_cooldown_not_per_url_ban` — 429 is service throttling: pause globally, but the URL must stay retryable., `test_enrich_uses_external_fallback_only_in_cryptolink_mode` — enrich runs on every get_user_by_*: subscription URLs must not go to the, `test_happ_api_fallback_disabled_by_setting` — HAPP_CRYPTOLINK_API_FALLBACK_ENABLED=false must skip the external service., `test_happ_local_encryption_roundtrip` — Локальное шифрование должно давать happ://crypt4/<base64>, расшифровываемый, `test_happ_local_encryption_real_key_single_rsa4096_block` — Со вшитым ключом Happ v4 (RSA-4096) шифртекст — один блок в 512 байт,, `test_happ_local_encryption_rejects_oversized_payload` — PKCS#1 v1.5 вмещает size_in_bytes()-11: слишком длинная ссылка -> None,, `test_happ_local_encryption_disabled_by_setting` — HAPP_CRYPTOLINK_LOCAL_ENCRYPTION_ENABLED=false должен пропустить локальный, `test_happ_local_encryption_stable_for_same_url` — Паддинг PKCS#1 v1.5 случайный, поэтому без кэша каждый вызов давал бы новую, `test_enrich_uses_local_encryption_without_network` — С локальным шифрованием enrich заполняет crypt-ссылку в любом режиме бота,, `test_delete_all_devices_reports_failure_when_devices_remain` — Панель может ответить 200, оставив устройства — это не успех., `test_delete_all_devices_reports_success_when_panel_is_empty`, `test_update_user_sends_null_tag_to_clear_it` — В контракте панели ``tag`` в PATCH — optional + nullable: не прислать = не, `test_update_user_leaves_tag_alone_when_not_given`
@@ -4213,6 +4289,9 @@
 - `tests/handlers/test_show_tariffs_list_single_skip.py` — Python-модуль
   Классы: нет
   Функции: `test_show_tariffs_list_single_tariff_skips_list_and_proceeds` — Один тариф из get_tariffs_for_user → не рисуем список, сразу _proceed с skip_selection., `test_show_tariffs_list_multiple_tariffs_shows_list` — Два и больше тарифов → список как раньше, без авто-перехода., `test_select_tariff_wrapper_parses_id_and_delegates` — select_tariff остаётся тонкой обёрткой: парсит id и зовёт _proceed без skip_selection., `test_proceed_skip_selection_uses_back_to_menu` — Схлопнутый выбор: клавиатура периодов с back_callback=back_to_menu., `test_proceed_normal_selection_uses_menu_buy_back` — Обычный выбор из списка: клавиатура периодов с back_callback=menu_buy., `test_back_target_survives_a_redraw_of_the_custom_screen` — «Назад» не должен деградировать при перерисовке конфигуратора., `test_single_owned_tariff_shows_the_list_instead_of_a_dead_button` — Если покупать нечего, пропуск превращает «Купить» в мёртвую кнопку.
+- `tests/handlers/test_stars_shop_handlers.py` — Python-модуль
+  Классы: нет
+  Функции: `test_menu_offers_self_only_with_username`, `test_unavailable_shop_shows_alert`, `test_recipient_input_is_validated`, `test_preset_opens_confirmation_with_total`, `test_double_pay_tap_reuses_checkout_key`, `test_insufficient_balance_saves_cart_with_same_key`, `test_return_to_cart_keeps_original_key`, `test_legacy_main_menu_shows_button_only_when_available`
 - `tests/handlers/test_start_invite_only.py` — Python-модуль
   Классы: нет
   Функции: `test_registration_invite_payload_preserves_original_start_parameter`, `test_telegram_access_evaluation_forwards_identity_and_lock`, `test_create_user_with_registration_invite_commits_gift_atomically`, `test_invite_denial_includes_support_button_when_contact_is_configured`, `test_invite_denial_renders_without_button_when_contact_is_empty`, `test_pending_gift_drain_delegates_to_the_shared_claim_service` — Активация из FSM идёт через общий claim-сервис, а не через собственный запрос., `test_already_claimed_gift_is_reported_instead_of_ignored` — Ссылка, которую уже забрал другой человек, обязана отвечать, а не молчать.
@@ -4861,9 +4940,15 @@
 - `tests/services/test_shutdown_notification.py` — Python-модуль
   Классы: нет
   Функции: `test_docker_stop_is_a_planned_shutdown_with_a_hint`, `test_ctrl_c_is_named`, `test_unknown_signal_is_named_by_its_name`, `test_polling_crash_is_a_failure_with_the_error_and_advice`, `test_long_error_is_cut`, `test_without_start_time_there_is_no_uptime`, `test_uptime_format`, `admin_chat`, `test_planned_stop_goes_to_the_infrastructure_topic`, `test_crash_goes_to_the_errors_topic_with_a_contact_button`, `test_disabled_notifications_send_nothing`, `test_send_failure_does_not_raise`, `test_main_does_not_shadow_datetime_locally` — Локальный ``from datetime import datetime`` в ветке делает имя локальным для всей, `test_shutdown_notice_is_sent_before_services_are_stopped` — Docker даёт на остановку ~10 секунд: сообщение — первым делом, пока сессия жива.
+- `tests/services/test_stars_fulfillment_service.py` — Python-модуль
+  Классы: нет
+  Функции: `test_success_records_broadcasting_before_money_leaves`, `test_retryable_error_requeues_then_refunds_after_max_attempts`, `test_uncertain_broadcast_goes_to_review_without_refund`, `test_unexpected_error_after_broadcast_is_never_retried`, `test_unknown_recipient_is_refunded_immediately`, `test_recover_after_crash`, `test_dry_run_completes_without_fragment`
 - `tests/services/test_stars_payload_amount.py` — Python-модуль
   Классы: нет
   Функции: `test_parser_extracts_amount_kopeks_from_known_payload_shapes`, `test_parser_returns_none_for_unrecognised_shapes`, `test_plausibility_accepts_lossless_round_trip` — At rate=1.0 with integer rubles, payload == reconstructed exactly., `test_plausibility_accepts_sub_ruble_drift` — 50.50 ₽ requested → 50 ⭐ × 1.0 = 50.00 ₽ reconstructed → 50 kopeks drift, well within tolerance., `test_plausibility_accepts_20pct_drift` — A 20% rate change between invoice creation and payment must NOT trip the guard., `test_plausibility_rejects_inflated_payload` — A payload claiming 10× the reconstructed amount is pathological — fall back to stars×rate., `test_plausibility_rejects_zero_or_negative`, `test_plausibility_uses_minimum_100_kopek_floor_for_tiny_amounts` — For tiny amounts (e.g. 50 kopeks reconstructed), 20% would be 10 — too tight., `test_negative_control_old_rate_was_lossy` — Regression cover: the pre-fix flow under rate=1.3 lost 0.50 ₽ on a 150 ₽ top-up., `test_negative_control_at_new_rate_is_lossless_for_integer_rubles` — At rate=1.0 with integer rubles, payload and reconstructed agree exactly.
+- `tests/services/test_stars_shop_service.py` — Python-модуль
+  Классы: нет
+  Функции: `shop_enabled`, `quiet_side_effects`, `test_presets_are_sorted_unique_and_within_bounds`, `test_normalize_recipient_accepts_common_forms`, `test_normalize_recipient_rejects_invalid`, `test_quote_uses_price_per_star_and_bounds`, `test_shop_hidden_without_fragment_unless_dry_run`, `test_purchase_debits_balance_and_queues_order`, `test_repeat_with_same_key_does_not_charge_twice`, `test_insufficient_balance_creates_nothing`, `test_stale_price_is_rejected_with_fresh_quote`, `test_disabled_shop_and_restricted_user_are_refused`, `test_refund_returns_money_once`, `test_completed_order_cannot_be_refunded_or_retried`, `test_admin_review_actions`, `test_stats_count_completed_and_refunded`
 - `tests/services/test_startup_logo_prewarm.py` — Python-модуль
   Классы: нет
   Функции: `test_prewarm_caches_file_id_and_deletes_message`, `test_prewarm_skips_when_already_cached`, `test_prewarm_no_target_chat_skips`, `test_prewarm_is_best_effort_on_timeout`

@@ -760,6 +760,13 @@ class MenuLayoutService:
             if not settings.CONTESTS_BUTTON_VISIBLE:
                 return False
 
+        # stars_shop_available
+        if conditions.get('stars_shop_available') is True:
+            from app.services.stars_shop_service import is_shop_available
+
+            if not is_shop_available():
+                return False
+
         # support_enabled
         if conditions.get('support_enabled') is True:
             try:

@@ -507,6 +507,16 @@ def _build_cabinet_main_menu_keyboard(
                     ref_text = section_cfg.get('labels', {}).get(language, '') or texts.MENU_REFERRALS
                     row_buttons.append(_cabinet_button(ref_text, '/referral', 'menu_referrals'))
 
+                case 'stars':
+                    from app.services.stars_shop_service import is_shop_available
+
+                    if not is_shop_available() or not section_cfg.get('enabled', True):
+                        continue
+                    stars_text = section_cfg.get('labels', {}).get(language, '') or texts.t(
+                        'MENU_STARS_SHOP', '⭐ Купить звёзды'
+                    )
+                    row_buttons.append(_cabinet_button(stars_text, '/stars', 'menu_stars_shop'))
+
                 case 'support':
                     if not _is_support_enabled():
                         continue
@@ -759,6 +769,14 @@ def get_main_menu_keyboard(
     # Добавляем кнопку рефералов, только если программа включена
     if settings.is_referral_program_enabled():
         paired_buttons.append(InlineKeyboardButton(text=texts.MENU_REFERRALS, callback_data='menu_referrals'))
+
+    # Магазин звёзд Telegram — только когда включён и выдача настроена
+    from app.services.stars_shop_service import is_shop_available
+
+    if is_shop_available():
+        paired_buttons.append(
+            InlineKeyboardButton(text=texts.t('MENU_STARS_SHOP', '⭐ Купить звёзды'), callback_data='menu_stars_shop')
+        )
 
     # Добавляем кнопку конкурсов
     if settings.CONTESTS_ENABLED and settings.CONTESTS_BUTTON_VISIBLE:
