@@ -40,6 +40,16 @@ def _back_button(texts) -> InlineKeyboardButton:
     return InlineKeyboardButton(text=texts.BACK, callback_data=MENU_CALLBACK)
 
 
+def _drop_stars_payment_method(keyboard: InlineKeyboardMarkup) -> None:
+    """Оплата звёздами Telegram за покупку звёзд — бессмыслица: убираем этот способ."""
+    rows = []
+    for row in keyboard.inline_keyboard:
+        kept = [button for button in row if not (button.callback_data or '').startswith('topup_amount|stars|')]
+        if kept:
+            rows.append(kept)
+    keyboard.inline_keyboard = rows
+
+
 async def _show(callback_or_message, text: str, keyboard: InlineKeyboardMarkup) -> None:
     """Отредактировать сообщение с кнопкой или ответить новым на текстовый ввод."""
     if isinstance(callback_or_message, types.CallbackQuery):
@@ -376,15 +386,30 @@ async def _purchase(
                 source='bot',
             ),
         )
-        text = texts.t(
-            'STARS_SHOP_INSUFFICIENT',
-            '💰 Не хватает <b>{missing}</b>.\n\n'
-            'Пополните баланс — заказ {quantity} ⭐ для @{recipient} оплатится автоматически.',
-        ).format(
-            missing=texts.format_price(exc.missing_kopeks),
-            quantity=quantity,
-            recipient=html.escape(recipient),
-        )
+        # Экран — как оформление заказа, а не «пополните баланс»: кнопки ниже ведут сразу
+        # на оплату недостающей суммы, после оплаты заказ проводится из сохранённой корзины.
+        if exc.available_kopeks > 0:
+            text = texts.t(
+                'STARS_SHOP_CHECKOUT_PARTIAL',
+                '⭐ <b>{quantity} ⭐</b> для @{recipient}\n\n'
+                'Сумма заказа: {total}\nС баланса: {balance}\nДоплатить: <b>{missing}</b>\n\n'
+                'Выберите способ оплаты — звёзды придут автоматически через несколько секунд после оплаты.',
+            ).format(
+                quantity=quantity,
+                recipient=html.escape(recipient),
+                total=texts.format_price(exc.required_kopeks),
+                balance=texts.format_price(exc.available_kopeks),
+                missing=texts.format_price(exc.missing_kopeks),
+            )
+        else:
+            text = texts.t(
+                'STARS_SHOP_CHECKOUT',
+                '⭐ <b>{quantity} ⭐</b> для @{recipient}\n\n'
+                'К оплате: <b>{missing}</b>\n\n'
+                'Выберите способ оплаты — звёзды придут автоматически через несколько секунд после оплаты.',
+            ).format(
+                quantity=quantity, recipient=html.escape(recipient), missing=texts.format_price(exc.missing_kopeks)
+            )
         keyboard = get_insufficient_balance_keyboard(
             db_user.language,
             resume_callback=RETURN_TO_CART_CALLBACK,
@@ -392,6 +417,7 @@ async def _purchase(
             has_saved_cart=True,
             resume_text=texts.t('STARS_SHOP_RETURN_TO_CART_BUTTON', '⭐ Вернуться к заказу звёзд'),
         )
+        _drop_stars_payment_method(keyboard)
         await _show(callback, text, keyboard)
         return
     except shop.StarsPriceChangedError as exc:

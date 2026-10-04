@@ -59,6 +59,7 @@ def build_fragment_client() -> FragmentStarsClient:
         api_provider=settings.FRAGMENT_TON_API_PROVIDER,
         wallet_version=settings.FRAGMENT_WALLET_VERSION,
         proxy=settings.FRAGMENT_PROXY or None,
+        ton_api_rps=settings.FRAGMENT_TON_API_RPS,
     )
 
 

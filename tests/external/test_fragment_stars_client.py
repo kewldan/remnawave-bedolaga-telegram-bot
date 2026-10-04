@@ -19,8 +19,9 @@ _SEED = ' '.join(['word'] * 24)
 _ADDRESS = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs'
 
 
-def _client() -> fc.FragmentStarsClient:
-    return fc.FragmentStarsClient(cookies=_COOKIES, seed=_SEED, api_key='key')
+def _client(ton_api_rps: float = 0) -> fc.FragmentStarsClient:
+    # Лимит запросов проверяется отдельными тестами; в остальных он только замедлял бы прогон.
+    return fc.FragmentStarsClient(cookies=_COOKIES, seed=_SEED, api_key='key', ton_api_rps=ton_api_rps)
 
 
 class _Session:
@@ -175,3 +176,44 @@ async def test_vendored_broadcast_retries_rate_limit(monkeypatch):
     )
     assert await vendor_wallet._broadcast_with_retry(wallet, [_ADDRESS], [1], [None]) == 'ok'
     assert wallet.transfer_message.await_count == 2
+
+
+@pytest.mark.asyncio
+async def test_ton_operations_are_spaced_by_rate_limit(monkeypatch):
+    """tonapi без платного тарифа — 1 запрос в секунду: операции идут по одной и с паузой."""
+    clock = [100.0]
+    sleeps: list[float] = []
+
+    async def fake_sleep(seconds):
+        sleeps.append(round(seconds, 2))
+        clock[0] += seconds
+
+    monkeypatch.setattr(fc.time, 'monotonic', lambda: clock[0])
+    monkeypatch.setattr(fc.asyncio, 'sleep', fake_sleep)
+    monkeypatch.setattr(fc, '_ton_last_done', 0.0)
+    wallet = SimpleNamespace(address='A', state='active', gram_balance=1.0, usdt_balance=0.0)
+    monkeypatch.setattr(fc, 'fetch_wallet_info', AsyncMock(return_value=wallet))
+
+    client = _client(ton_api_rps=1.0)
+    await client.get_wallet()
+    await client.get_wallet()
+    assert sleeps == [1.1]  # первая — сразу, вторая ждёт окно лимита
+
+
+@pytest.mark.asyncio
+async def test_wallet_read_retries_rate_limit(monkeypatch):
+    monkeypatch.setattr(fc, '_ton_last_done', 0.0)
+    monkeypatch.setattr(fc.asyncio, 'sleep', AsyncMock())
+    wallet = SimpleNamespace(address='A', state='active', gram_balance=1.0, usdt_balance=0.0)
+    fetch = AsyncMock(side_effect=[RuntimeError('429 rate limit: limit for tier'), wallet])
+    monkeypatch.setattr(fc, 'fetch_wallet_info', fetch)
+    assert (await _client().get_wallet()) is wallet
+    assert fetch.await_count == 2
+
+
+def test_vendored_ton_client_gets_rate_limit():
+    client = SimpleNamespace(api_provider='tonapi', api_key='k', ton_api_rps=1.0)
+    with patch.object(vendor_wallet, 'TonapiClient') as tonapi:
+        vendor_wallet._make_ton_client(client)
+    assert tonapi.call_args.kwargs['rps_limit'] == 1
+    assert tonapi.call_args.kwargs['rps_period'] == pytest.approx(1.1)

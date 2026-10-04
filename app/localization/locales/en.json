@@ -2331,7 +2331,6 @@
   "STARS_SHOP_SESSION_EXPIRED": "⌛ This selection has expired, please start again.",
   "STARS_SHOP_CONFIRM": "⭐ <b>Check your order</b>\n\nRecipient: <b>@{recipient}</b>\nAmount: <b>{quantity} ⭐</b>\nTo pay: <b>{total}</b>\nBalance: {balance}",
   "STARS_SHOP_PAY_BUTTON": "✅ Pay",
-  "STARS_SHOP_INSUFFICIENT": "💰 You are <b>{missing}</b> short.\n\nTop up your balance — the order of {quantity} ⭐ for @{recipient} will be paid automatically.",
   "STARS_SHOP_RETURN_TO_CART_BUTTON": "⭐ Back to Stars order",
   "STARS_SHOP_PRICE_CHANGED": "⚠️ The price has changed — please review the order again.",
   "STARS_SHOP_RESTRICTED": "⛔ Purchases are restricted for your account.",
@@ -2354,5 +2353,7 @@
   "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 By the way, we also have a VPN — try it free for {days} days.",
   "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 Try VPN for free",
   "STARS_SHOP_VPN_OFFER_BUY": "🔐 By the way, we also have a VPN — set up in a minute.",
-  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 Get VPN"
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 Get VPN",
+  "STARS_SHOP_CHECKOUT": "⭐ <b>{quantity} ⭐</b> for @{recipient}\n\nTo pay: <b>{missing}</b>\n\nChoose a payment method — the Stars will arrive automatically a few seconds after payment.",
+  "STARS_SHOP_CHECKOUT_PARTIAL": "⭐ <b>{quantity} ⭐</b> for @{recipient}\n\nOrder total: {total}\nFrom balance: {balance}\nTo pay: <b>{missing}</b>\n\nChoose a payment method — the Stars will arrive automatically a few seconds after payment."
 }
