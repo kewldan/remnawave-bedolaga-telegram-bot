@@ -161,6 +161,39 @@ async def test_insufficient_balance_saves_cart_with_same_key():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ('available', 'expected', 'unexpected'),
+    [(0, 'К оплате: <b>160', 'С баланса'), (6000, 'Доплатить: <b>100', 'К оплате')],
+)
+async def test_checkout_screen_pays_missing_amount_without_stars_method(available, expected, unexpected):
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+    state = _state()
+    await state.update_data(stars_recipient='durov')
+    await handlers.handle_quantity_preset(_callback('stars_shop_qty:100'), _user(), MagicMock(), state)
+    methods = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='⭐ Telegram Stars', callback_data='topup_amount|stars|16000')],
+            [InlineKeyboardButton(text='🏦 СБП', callback_data='topup_amount|yookassa_sbp|16000')],
+            [InlineKeyboardButton(text='⭐ Вернуться к заказу', callback_data=handlers.RETURN_TO_CART_CALLBACK)],
+        ]
+    )
+    error = shop.StarsInsufficientBalanceError(required_kopeks=16000, available_kopeks=available)
+    with (
+        patch.object(handlers.shop, 'purchase_stars_from_balance', AsyncMock(side_effect=error)),
+        patch.object(handlers.user_cart_service, 'save_user_cart', AsyncMock(return_value=True)),
+        patch.object(handlers, 'get_insufficient_balance_keyboard', MagicMock(return_value=methods)),
+    ):
+        callback = _callback('stars_shop_pay')
+        await handlers.handle_pay(callback, _user(), MagicMock(), state)
+
+    text = _shown_text(callback)
+    assert expected in text and unexpected not in text
+    assert 'звёзды придут автоматически' in text
+    assert _buttons(callback) == ['topup_amount|yookassa_sbp|16000', handlers.RETURN_TO_CART_CALLBACK]
+
+
+@pytest.mark.asyncio
 async def test_return_to_cart_keeps_original_key():
     state = _state()
     cart = {'cart_mode': 'stars_purchase', 'recipient_username': 'durov', 'quantity': 100, 'stars_checkout_id': 'orig'}

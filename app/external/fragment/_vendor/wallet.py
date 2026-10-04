@@ -62,11 +62,14 @@ def _make_ton_client(client: "FragmentClient") -> Any:
     Returns:
         TonapiClient or ToncenterClient context manager.
     """
+    # Bedolaga: лимит запросов провайдера (у tonapi на бесплатном тарифе — 1 RPS).
+    rps = float(getattr(client, "ton_api_rps", 0) or 0)
+    limits = {"rps_limit": 1, "rps_period": 1.1 / rps} if rps > 0 else {}
     if client.api_provider == "toncenter":
         logger.debug("Using ToncenterClient with API key")
-        return ToncenterClient(network=NetworkGlobalID.MAINNET, api_key=client.api_key)
+        return ToncenterClient(network=NetworkGlobalID.MAINNET, api_key=client.api_key, **limits)
     logger.debug("Using TonapiClient with API key")
-    return TonapiClient(network=NetworkGlobalID.MAINNET, api_key=client.api_key)
+    return TonapiClient(network=NetworkGlobalID.MAINNET, api_key=client.api_key, **limits)
 
 
 async def _get_usdt_balance(ton: Any, wallet_address: str) -> float:
@@ -557,7 +560,8 @@ async def fetch_wallet_info(client: "FragmentClient") -> WalletInfo:
 
             wallet_address = wallet.address.to_str(False, False)
             gram_balance = round(wallet.balance / 1_000_000_000, 4)
-            usdt_balance = await _get_usdt_balance(ton, wallet_address)
+            # Bedolaga: звёзды оплачиваются только в TON — USDT не запрашиваем (минус 2 запроса).
+            usdt_balance = 0.0
 
             logger.info(
                 "Wallet info: %s, state=%s, %.4f GRAM, %.4f USDT",

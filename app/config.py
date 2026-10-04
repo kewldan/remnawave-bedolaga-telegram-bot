@@ -740,6 +740,7 @@ class Settings(BaseSettings):
     FRAGMENT_TON_API_KEY: str = ''
     FRAGMENT_TON_API_PROVIDER: str = 'toncenter'
     FRAGMENT_WALLET_VERSION: str = 'V5R1'
+    FRAGMENT_TON_API_RPS: float = 1.0  # запросов в секунду к TON API (tonapi без платного тарифа — 1)
     FRAGMENT_PROXY: str = ''
 
     # Отключение превью ссылок в сообщениях бота

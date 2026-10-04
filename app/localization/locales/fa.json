@@ -2331,7 +2331,6 @@
   "STARS_SHOP_SESSION_EXPIRED": "⌛ این انتخاب منقضی شده است، دوباره شروع کنید.",
   "STARS_SHOP_CONFIRM": "⭐ <b>سفارش را بررسی کنید</b>\n\nگیرنده: <b>@{recipient}</b>\nتعداد: <b>{quantity} ⭐</b>\nقابل پرداخت: <b>{total}</b>\nموجودی: {balance}",
   "STARS_SHOP_PAY_BUTTON": "✅ پرداخت",
-  "STARS_SHOP_INSUFFICIENT": "💰 <b>{missing}</b> کم دارید.\n\nموجودی را شارژ کنید — سفارش {quantity} ⭐ برای @{recipient} به‌طور خودکار پرداخت می‌شود.",
   "STARS_SHOP_RETURN_TO_CART_BUTTON": "⭐ بازگشت به سفارش ستاره",
   "STARS_SHOP_PRICE_CHANGED": "⚠️ قیمت تغییر کرده است — سفارش را دوباره بررسی کنید.",
   "STARS_SHOP_RESTRICTED": "⛔ خرید برای حساب شما محدود شده است.",
@@ -2354,5 +2353,7 @@
   "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 راستی، ما VPN هم داریم — {days} روز رایگان امتحان کنید.",
   "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 امتحان رایگان VPN",
   "STARS_SHOP_VPN_OFFER_BUY": "🔐 راستی، ما VPN هم داریم — راه‌اندازی در یک دقیقه.",
-  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 خرید VPN"
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 خرید VPN",
+  "STARS_SHOP_CHECKOUT": "⭐ <b>{quantity} ⭐</b> برای @{recipient}\n\nمبلغ قابل پرداخت: <b>{missing}</b>\n\nروش پرداخت را انتخاب کنید — ستاره‌ها چند ثانیه پس از پرداخت به‌طور خودکار ارسال می‌شوند.",
+  "STARS_SHOP_CHECKOUT_PARTIAL": "⭐ <b>{quantity} ⭐</b> برای @{recipient}\n\nمبلغ سفارش: {total}\nاز موجودی: {balance}\nباقی‌مانده: <b>{missing}</b>\n\nروش پرداخت را انتخاب کنید — ستاره‌ها چند ثانیه پس از پرداخت به‌طور خودکار ارسال می‌شوند."
 }

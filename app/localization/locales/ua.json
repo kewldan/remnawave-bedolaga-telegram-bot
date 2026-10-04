@@ -2331,7 +2331,6 @@
   "STARS_SHOP_SESSION_EXPIRED": "⌛ Вибір застарів, почніть заново.",
   "STARS_SHOP_CONFIRM": "⭐ <b>Перевірте замовлення</b>\n\nОтримувач: <b>@{recipient}</b>\nКількість: <b>{quantity} ⭐</b>\nДо сплати: <b>{total}</b>\nНа балансі: {balance}",
   "STARS_SHOP_PAY_BUTTON": "✅ Сплатити",
-  "STARS_SHOP_INSUFFICIENT": "💰 Не вистачає <b>{missing}</b>.\n\nПоповніть баланс — замовлення {quantity} ⭐ для @{recipient} сплатиться автоматично.",
   "STARS_SHOP_RETURN_TO_CART_BUTTON": "⭐ Повернутися до замовлення зірок",
   "STARS_SHOP_PRICE_CHANGED": "⚠️ Ціна змінилася — перевірте замовлення ще раз.",
   "STARS_SHOP_RESTRICTED": "⛔ Покупки для вашого акаунта обмежені.",
@@ -2354,5 +2353,7 @@
   "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 До речі, у нас є VPN — спробуйте {days} дн. безкоштовно.",
   "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 Спробувати VPN безкоштовно",
   "STARS_SHOP_VPN_OFFER_BUY": "🔐 До речі, у нас є VPN — підключається за хвилину.",
-  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 Підключити VPN"
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 Підключити VPN",
+  "STARS_SHOP_CHECKOUT": "⭐ <b>{quantity} ⭐</b> для @{recipient}\n\nДо сплати: <b>{missing}</b>\n\nОберіть спосіб оплати — зірки прийдуть автоматично за кілька секунд після оплати.",
+  "STARS_SHOP_CHECKOUT_PARTIAL": "⭐ <b>{quantity} ⭐</b> для @{recipient}\n\nСума замовлення: {total}\nЗ балансу: {balance}\nДоплатити: <b>{missing}</b>\n\nОберіть спосіб оплати — зірки прийдуть автоматично за кілька секунд після оплати."
 }

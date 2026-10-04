@@ -2331,7 +2331,6 @@
   "STARS_SHOP_SESSION_EXPIRED": "⌛ 选择已过期，请重新开始。",
   "STARS_SHOP_CONFIRM": "⭐ <b>请核对订单</b>\n\n收款人：<b>@{recipient}</b>\n数量：<b>{quantity} ⭐</b>\n应付：<b>{total}</b>\n余额：{balance}",
   "STARS_SHOP_PAY_BUTTON": "✅ 支付",
-  "STARS_SHOP_INSUFFICIENT": "💰 还差 <b>{missing}</b>。\n\n充值后，给 @{recipient} 的 {quantity} ⭐ 订单将自动支付。",
   "STARS_SHOP_RETURN_TO_CART_BUTTON": "⭐ 返回星星订单",
   "STARS_SHOP_PRICE_CHANGED": "⚠️ 价格已变动——请重新核对订单。",
   "STARS_SHOP_RESTRICTED": "⛔ 您的账户购买受限。",
@@ -2354,5 +2353,7 @@
   "STARS_SHOP_VPN_OFFER_TRIAL": "🔐 顺便一提，我们还提供 VPN，可免费试用 {days} 天。",
   "STARS_SHOP_VPN_TRIAL_BUTTON": "🎁 免费试用 VPN",
   "STARS_SHOP_VPN_OFFER_BUY": "🔐 顺便一提，我们还提供 VPN，一分钟即可连接。",
-  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 开通 VPN"
+  "STARS_SHOP_VPN_BUY_BUTTON": "🔐 开通 VPN",
+  "STARS_SHOP_CHECKOUT": "⭐ 给 @{recipient} 的 <b>{quantity} ⭐</b>\n\n应付：<b>{missing}</b>\n\n请选择支付方式——支付后几秒内星星将自动到账。",
+  "STARS_SHOP_CHECKOUT_PARTIAL": "⭐ 给 @{recipient} 的 <b>{quantity} ⭐</b>\n\n订单金额：{total}\n余额抵扣：{balance}\n还需支付：<b>{missing}</b>\n\n请选择支付方式——支付后几秒内星星将自动到账。"
 }

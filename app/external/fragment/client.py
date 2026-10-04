@@ -13,8 +13,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
-from collections.abc import Awaitable, Callable
+import time
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 import structlog
@@ -39,6 +42,13 @@ logger = structlog.get_logger(__name__)
 STARS_MIN = fragment_constants.STARS_PURCHASE_MIN
 STARS_MAX = fragment_constants.STARS_PURCHASE_MAX
 _IMPERSONATE = 'chrome120'
+
+# Операции с TON API идут по одной на процесс и с паузой между ними: лимит провайдера общий
+# на ключ, а клиент tonutils создаётся на каждую операцию и считает запросы только свои.
+# Без этого проверка кошелька из админки во время покупки ловит 429 на подтверждении
+# перевода — и заказ уходит на ручную проверку.
+_ton_lock = asyncio.Lock()
+_ton_last_done = 0.0
 _CONFIRM_REFERER = 'stars/buy'
 
 
@@ -126,6 +136,7 @@ class FragmentStarsClient:
         wallet_version: str = 'V5R1',
         timeout: float = fragment_constants.DEFAULT_TIMEOUT,
         proxy: str | None = None,
+        ton_api_rps: float = 1.0,
     ) -> None:
         self.cookies = parse_cookies(cookies)
 
@@ -149,9 +160,23 @@ class FragmentStarsClient:
         self.wallet_version = version
 
         self.timeout = float(timeout)
+        self.ton_api_rps = max(0.0, float(ton_api_rps or 0))
         self.proxy = proxy.strip() if proxy else None
         if self.proxy:
             parse_proxy(self.proxy)
+
+    @asynccontextmanager
+    async def _ton_slot(self) -> AsyncIterator[None]:
+        global _ton_last_done
+        async with _ton_lock:
+            if self.ton_api_rps > 0:
+                wait = _ton_last_done + 1.1 / self.ton_api_rps - time.monotonic()
+                if wait > 0:
+                    await asyncio.sleep(wait)
+            try:
+                yield
+            finally:
+                _ton_last_done = time.monotonic()
 
     def _session(self) -> requests.AsyncSession:
         return requests.AsyncSession(
@@ -191,10 +216,15 @@ class FragmentStarsClient:
 
     async def get_wallet(self) -> WalletInfo:
         """Адрес и баланс платёжного кошелька."""
-        try:
-            return await fetch_wallet_info(self)
-        except Exception as exc:
-            raise FragmentRetryableError(f'Кошелёк: не удалось получить баланс ({exc})') from exc
+        for attempt in range(3):
+            try:
+                async with self._ton_slot():
+                    return await fetch_wallet_info(self)
+            except Exception as exc:
+                if '429' in str(exc) and attempt < 2:
+                    continue  # следующий слот очереди наступит не раньше чем через ~1 с
+                raise FragmentRetryableError(f'Кошелёк: не удалось получить баланс ({exc})') from exc
+        raise AssertionError('unreachable')
 
     async def purchase_stars(
         self,
@@ -245,7 +275,8 @@ class FragmentStarsClient:
                 if not req_id:
                     raise FragmentRetryableError('Fragment не вернул номер заявки')
 
-                account = await build_account_info(self)
+                async with self._ton_slot():
+                    account = await build_account_info(self)
                 transaction = await post_fragment_api(
                     session,
                     fragment_hash,
@@ -279,7 +310,8 @@ class FragmentStarsClient:
             await before_broadcast(req_id, cost_nanoton)
 
         try:
-            tx_result = await execute_transaction(self, transaction)
+            async with self._ton_slot():
+                tx_result = await execute_transaction(self, transaction)
         except (WalletError, SeqnoError) as exc:
             # Обе ошибки возникают до отправки: проверка баланса и чтение seqno.
             raise FragmentRetryableError(f'Кошелёк: перевод не отправлен ({exc})') from exc

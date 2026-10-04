@@ -18,7 +18,7 @@
 | `models.py` | `FragmentAPI/types/models.py` | оставлены модели, нужные для покупки звёзд |
 | `html.py` | `FragmentAPI/utils/html.py` | оставлен разбор цен на звёзды; вырезание тегов `<[^<>]+>` вместо квадратичного `<[^>]+>` |
 | `http.py`, `proxy.py`, `retry.py`, `decoder.py` | `FragmentAPI/utils/*` | только пути импорта |
-| `wallet.py` | `FragmentAPI/utils/wallet.py` | повторная отправка перевода — только при HTTP 429 (иначе возможна двойная оплата) |
+| `wallet.py` | `FragmentAPI/utils/wallet.py` | повторная отправка перевода — только при HTTP 429 (иначе возможна двойная оплата); лимит запросов к TON API (`ton_api_rps`); баланс USDT не запрашивается |
 
 Во всех файлах заменены пути импорта `FragmentAPI.*` → `app.external.fragment._vendor.*`.
 Клиент (`../client.py`) написан заново по мотивам `FragmentAPI/client.py` и
