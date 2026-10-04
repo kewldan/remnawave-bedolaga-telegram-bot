@@ -53,7 +53,7 @@ def parse_stars_packages(html: str) -> list[StarsPrice]:
         label_html = label.html or ""
 
         ton_m = re.search(r'icon-ton[^>]*>([^<]*(?:<span[^>]*>[^<]*</span>)?)', label_html)
-        ton_raw = re.sub(r'<[^>]+>', '', ton_m.group(1)).replace(',', '').strip() if ton_m else "0"
+        ton_raw = re.sub(r'<[^<>]+>', '', ton_m.group(1)).replace(',', '').strip() if ton_m else "0"
 
         usd_m = re.search(r'icon-usd[^>]*>([^<]+)', label_html)
         if not usd_m:
@@ -68,7 +68,7 @@ def parse_stars_packages(html: str) -> list[StarsPrice]:
 def parse_stars_price_from_html(html: str) -> tuple[str | None, str | None]:
     """Parse GRAM and USD price from inline HTML fragment."""
     ton_m = re.search(r'icon-ton[^>]*>([^<]*(?:<span[^>]*>[^<]*</span>)?)', html)
-    gram_price = re.sub(r'<[^>]+>', '', ton_m.group(1)).replace(',', '').strip() if ton_m else None
+    gram_price = re.sub(r'<[^<>]+>', '', ton_m.group(1)).replace(',', '').strip() if ton_m else None
 
     usd_m = re.search(r'icon-usd[^>]*>([^<]+)', html)
     if not usd_m:

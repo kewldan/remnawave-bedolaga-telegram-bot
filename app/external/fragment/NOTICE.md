@@ -16,7 +16,7 @@
 | `exceptions.py` | `FragmentAPI/exceptions.py` | удалён `MarketAppAPIError` |
 | `constants.py` | `FragmentAPI/types/constants.py` | удалены токен MarketApp по умолчанию и методы No-KYC |
 | `models.py` | `FragmentAPI/types/models.py` | оставлены модели, нужные для покупки звёзд |
-| `html.py` | `FragmentAPI/utils/html.py` | оставлен разбор цен на звёзды |
+| `html.py` | `FragmentAPI/utils/html.py` | оставлен разбор цен на звёзды; вырезание тегов `<[^<>]+>` вместо квадратичного `<[^>]+>` |
 | `http.py`, `proxy.py`, `retry.py`, `decoder.py` | `FragmentAPI/utils/*` | только пути импорта |
 | `wallet.py` | `FragmentAPI/utils/wallet.py` | повторная отправка перевода — только при HTTP 429 (иначе возможна двойная оплата) |
 

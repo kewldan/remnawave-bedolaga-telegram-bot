@@ -42,6 +42,11 @@ class GiftPurchaseStates(StatesGroup):
     cart_saved_for_topup = State()
 
 
+class StarsShopStates(StatesGroup):
+    waiting_recipient = State()
+    waiting_quantity = State()
+
+
 class GiftActivationStates(StatesGroup):
     waiting_for_code = State()
 

@@ -59,6 +59,12 @@ DEFAULT_MENU_CONFIG: dict[str, Any] = {
             'max_per_row': 2,
         },
         {
+            'id': 'stars_shop_row',
+            'buttons': ['stars_shop'],
+            'conditions': {'stars_shop_available': True},
+            'max_per_row': 1,
+        },
+        {
             'id': 'contests_row',
             'buttons': ['contests'],
             'conditions': {'contests_visible': True},
@@ -200,6 +206,16 @@ DEFAULT_MENU_CONFIG: dict[str, Any] = {
             'enabled': True,
             'visibility': 'all',
             'conditions': {'referral_enabled': True},
+            'dynamic_text': False,
+        },
+        'stars_shop': {
+            'type': 'builtin',
+            'builtin_id': 'stars_shop',
+            'text': {'ru': '⭐ Купить звёзды', 'en': '⭐ Buy Stars'},
+            'action': 'menu_stars_shop',
+            'enabled': True,
+            'visibility': 'all',
+            'conditions': {'stars_shop_available': True},
             'dynamic_text': False,
         },
         'contests': {
@@ -344,6 +360,13 @@ BUILTIN_BUTTONS_INFO: list[dict[str, Any]] = [
         'default_text': {'ru': '👥 Рефералы', 'en': '👥 Referrals'},
         'callback_data': 'menu_referrals',
         'default_conditions': {'referral_enabled': True},
+        'supports_dynamic_text': False,
+    },
+    {
+        'id': 'stars_shop',
+        'default_text': {'ru': '⭐ Купить звёзды', 'en': '⭐ Buy Stars'},
+        'callback_data': 'menu_stars_shop',
+        'default_conditions': {'stars_shop_available': True},
         'supports_dynamic_text': False,
     },
     {

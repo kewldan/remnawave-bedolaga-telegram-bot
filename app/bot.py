@@ -15,6 +15,7 @@ from app.handlers import (
     referral_settings,
     server_status,
     simple_subscription,
+    stars_shop as stars_shop_handlers,
     start,
     subscription,
     support,
@@ -189,6 +190,7 @@ async def setup_bot() -> tuple[Bot, Dispatcher]:
     menu.register_handlers(dp)
     subscription.register_handlers(dp)
     register_gift_handlers(dp)
+    stars_shop_handlers.register_handlers(dp)
     balance.register_balance_handlers(dp)
     promocode.register_handlers(dp)
     referral.register_handlers(dp)
