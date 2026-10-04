@@ -63,8 +63,13 @@ class AdminStarsOrderResponse(StarsOrderResponse):
     fragment_req_id: str | None = None
     ton_tx_hash: str | None = None
     cost_nanoton: int | None = None
+    ton_rate_kopeks: int | None = None
+    cost_kopeks: int | None = None
     next_attempt_at: datetime | None = None
+    processing_started_at: datetime | None = None
     updated_at: datetime | None = None
+    user_telegram_id: int | None = None
+    user_username: str | None = None
 
 
 class AdminStarsOrdersListResponse(BaseModel):
@@ -82,8 +87,11 @@ class AdminStarsStatsResponse(BaseModel):
     refunded_kopeks: int
     cost_nanoton: int
     margin_kopeks: int | None
+    cost_kopeks: int | None = None
     by_status: dict[str, int]
     needs_review: int
+    ton_rate_kopeks: int | None = None
+    ton_rate_source: str | None = None
 
 
 class AdminStarsStatusResponse(BaseModel):
@@ -94,7 +102,9 @@ class AdminStarsStatusResponse(BaseModel):
     min_quantity: int
     max_quantity: int
     presets: list[int]
-    ton_rate_kopeks: int
+    ton_rate_kopeks: int | None
+    ton_rate_source: str | None = None
+    wallet_low_stars: int = 0
 
 
 class AdminStarsWalletResponse(BaseModel):
@@ -102,6 +112,7 @@ class AdminStarsWalletResponse(BaseModel):
     state: str
     balance_ton: float
     fragment_price_ton_per_100: str | None = None
+    ton_rate_kopeks: int | None = None
 
 
 class AdminMarkCompletedRequest(BaseModel):

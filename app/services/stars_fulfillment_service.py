@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import asyncio
+import html
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -30,6 +31,8 @@ from app.external.fragment import (
     FragmentStarsClient,
     StarsPurchaseReceipt,
 )
+from app.services.stars_notifications import WalletSnapshot, build_completed_message, build_order_keyboard
+from app.services.ton_rate_service import TonRate, get_ton_rate
 
 
 logger = structlog.get_logger(__name__)
@@ -208,7 +211,10 @@ class StarsFulfillmentService:
         except (FragmentRetryableError, FragmentConfigurationError) as exc:
             await self._retry_or_refund(order_id, attempts, str(exc))
             if isinstance(exc, FragmentConfigurationError):
-                await self._notify_admin(f'⚠️ Звёзды: проблема с настройкой Fragment\n{exc}')
+                await self._notify_admin(
+                    f'<b>⚠️ ЗВЁЗДЫ: ПРОБЛЕМА С НАСТРОЙКОЙ FRAGMENT</b>\n\n<blockquote>{html.escape(str(exc))}</blockquote>',
+                    order_id,
+                )
             return
         except Exception as exc:
             # Неожиданная ошибка: статус показывает, успел ли уйти перевод.
@@ -223,6 +229,7 @@ class StarsFulfillmentService:
             logger.exception('Звёзды: непредвиденная ошибка выдачи', order_id=order_id)
             return
 
+        rate = await get_ton_rate() if receipt.cost_nanoton else None
         order = await self._set(
             order_id,
             status=StarsOrderStatus.COMPLETED.value,
@@ -231,13 +238,12 @@ class StarsFulfillmentService:
             completed_at=datetime.now(UTC),
             last_error=None if receipt.fragment_confirmed else 'confirmReq не подтверждён Fragment',
             next_attempt_at=None,
+            ton_rate_kopeks=rate.kopeks if rate else None,
+            cost_kopeks=rate.nanoton_to_kopeks(receipt.cost_nanoton) if rate else None,
         )
         logger.info('Звёзды: заказ выполнен', order_id=order_id, quantity=quantity, tx=receipt.tx_hash)
         await self._notify_user(order, 'completed')
-        await self._notify_admin(
-            f'⭐ Продано {order.quantity} звёзд → @{order.recipient_username}\n'
-            f'Заказ #{order.id}, {order.amount_kopeks / 100:.2f} ₽'
-        )
+        await self._notify_admin_completed(order, rate)
 
     async def _dry_run(self, order_id: int, recipient: str, before_broadcast) -> StarsPurchaseReceipt:
         req_id = f'{_DRY_RUN_PREFIX}-{order_id}'
@@ -273,10 +279,20 @@ class StarsFulfillmentService:
                 order = await refund_order(db, order_id, reason=error)
         except Exception as exc:
             logger.error('Звёзды: автоматический возврат не прошёл', order_id=order_id, error=str(exc))
-            await self._notify_admin(f'🚨 Звёзды: заказ #{order_id} не выдан и деньги НЕ возвращены\n{error}\n{exc}')
+            await self._notify_admin(
+                f'<b>🚨 ЗВЁЗДЫ: ЗАКАЗ #{order_id} НЕ ВЫДАН, ДЕНЬГИ НЕ ВОЗВРАЩЕНЫ</b>\n\n'
+                f'<blockquote>{html.escape(error)}\n{html.escape(str(exc))}</blockquote>',
+                order_id,
+            )
             return
         await self._notify_user(order, user_reason)
-        await self._notify_admin(f'↩️ Звёзды: заказ #{order_id} не выдан, деньги возвращены на баланс\n{error}')
+        await self._notify_admin(
+            f'<b>↩️ ЗВЁЗДЫ: ЗАКАЗ #{order_id} НЕ ВЫДАН</b>\n\n'
+            f'{order.quantity} ⭐ → @{html.escape(order.recipient_username)}, '
+            f'{order.amount_kopeks / 100:.2f} ₽ вернули на баланс покупателя.\n'
+            f'<blockquote>{html.escape(error)}</blockquote>',
+            order_id,
+        )
 
     # ── Уведомления ────────────────────────────────────────────────────────
 
@@ -310,21 +326,51 @@ class StarsFulfillmentService:
         except Exception as exc:
             logger.warning('Звёзды: не удалось уведомить пользователя', order_id=order.id, error=str(exc))
 
-    async def _notify_admin(self, text: str) -> None:
+    async def _notify_admin(self, text: str, order_id: int | None = None) -> None:
         if self._bot is None:
             return
         try:
-            from app.services.admin_notification_service import AdminNotificationService
+            from app.services.admin_notification_service import AdminNotificationService, NotificationCategory
 
-            await AdminNotificationService(self._bot).send_admin_notification(text)
+            await AdminNotificationService(self._bot).send_admin_notification(
+                text,
+                reply_markup=build_order_keyboard(order_id) if order_id is not None else None,
+                category=NotificationCategory.PURCHASES,
+            )
         except Exception as exc:
             logger.warning('Звёзды: не удалось уведомить админов', error=str(exc))
 
+    async def _notify_admin_completed(self, order: StarsOrder, rate: TonRate | None) -> None:
+        if self._bot is None:
+            return
+        try:
+            from app.services.admin_notification_service import AdminNotificationService, NotificationCategory
+
+            async with AsyncSessionLocal() as db:
+                buyer = await db.get(User, order.user_id) if order.user_id is not None else None
+            wallet = None
+            if not settings.STARS_SHOP_DRY_RUN:
+                try:
+                    info = await asyncio.wait_for(build_fragment_client().get_wallet(), timeout=15)
+                    wallet = WalletSnapshot(address=info.address, balance_ton=float(info.gram_balance))
+                except Exception as exc:
+                    logger.warning('Звёзды: баланс кошелька для уведомления недоступен', error=str(exc))
+            text, markup = build_completed_message(
+                order, buyer=buyer, rate=rate, wallet=wallet, dry_run=bool(settings.STARS_SHOP_DRY_RUN)
+            )
+            await AdminNotificationService(self._bot).send_admin_notification(
+                text, reply_markup=markup, category=NotificationCategory.PURCHASES
+            )
+        except Exception as exc:
+            logger.warning('Звёзды: не удалось уведомить админов о продаже', order_id=order.id, error=str(exc))
+
     async def _notify_admin_review(self, order_id: int, error: str) -> None:
         await self._notify_admin(
-            f'🚨 Звёзды: заказ #{order_id} требует проверки\n'
-            f'Перевод TON мог уйти, а итог неизвестен. Проверьте кошелёк и закройте заказ в кабинете:'
-            f' «выполнен», «повторить» или «вернуть деньги».\n{error}'
+            f'<b>🚨 ЗВЁЗДЫ: ЗАКАЗ #{order_id} НА ПРОВЕРКЕ</b>\n\n'
+            f'Перевод TON мог уйти, а итог неизвестен. Проверьте исходящие переводы кошелька и закройте заказ'
+            f' в кабинете: «выполнен», «повторить» или «вернуть деньги».\n'
+            f'<blockquote>{html.escape(error)}</blockquote>',
+            order_id,
         )
 
 

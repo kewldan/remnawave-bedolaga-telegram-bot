@@ -31,6 +31,7 @@ from app.external.fragment import (
     StarsPurchaseReceipt,
 )
 from app.services import stars_fulfillment_service as fulfillment
+from app.services.ton_rate_service import TonRate
 from tests.fixtures.sqlite_memory import ensure_real_aiosqlite
 
 
@@ -68,6 +69,8 @@ def _settings(monkeypatch):
     monkeypatch.setattr(settings, 'STARS_SHOP_MAX_ATTEMPTS', 3)
     monkeypatch.setattr(settings, 'STARS_SHOP_RETRY_DELAY_SECONDS', 60)
     monkeypatch.setattr(settings, 'STARS_SHOP_SHOW_SENDER', False)
+    # Курс TON — без сети: 120 ₽ за TON.
+    monkeypatch.setattr(fulfillment, 'get_ton_rate', AsyncMock(return_value=TonRate(kopeks=12000, source='tonapi')))
 
 
 _seq = iter(range(1, 10_000))
@@ -107,6 +110,7 @@ def _service() -> fulfillment.StarsFulfillmentService:
     service = fulfillment.StarsFulfillmentService()
     service._notify_user = AsyncMock()
     service._notify_admin = AsyncMock()
+    service._notify_admin_completed = AsyncMock()
     return service
 
 
@@ -139,7 +143,11 @@ async def test_success_records_broadcasting_before_money_leaves(monkeypatch):
         assert (order.fragment_req_id, order.ton_tx_hash, order.cost_nanoton) == ('req-1', 'tx-hash', 420_000_000)
         assert order.recipient_name == 'Pavel'
         assert order.attempts == 1
+        # Себестоимость фиксируется по курсу на момент выдачи: 0.42 TON × 120 ₽ = 50.40 ₽.
+        assert (order.ton_rate_kopeks, order.cost_kopeks) == (12000, 5040)
         service._notify_user.assert_awaited_once()
+        notified_order, notified_rate = service._notify_admin_completed.await_args.args
+        assert notified_order.id == order_id and notified_rate.kopeks == 12000
         assert await service.process_next() is False
 
 

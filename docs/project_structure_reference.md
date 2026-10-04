@@ -1856,11 +1856,14 @@
   Классы: нет
   Функции: `auto_purchase_stars_cart` — Купить звёзды из корзины после пополнения. ``True`` — заказ оплачен.
 - `app/services/stars_fulfillment_service.py` — Python-модуль
-  Классы: `StarsFulfillmentService` (17 методов)
+  Классы: `StarsFulfillmentService` (18 методов)
   Функции: `build_fragment_client` — Клиент Fragment из настроек; ``FragmentConfigurationError``, если чего-то не хватает.
+- `app/services/stars_notifications.py` — Python-модуль
+  Классы: `WalletSnapshot`
+  Функции: `is_real_tx` — Хеш настоящего перевода (а не тестового режима) — по нему есть что открыть., `build_completed_message` — Уведомление о выданном заказе: кто, кому, сколько заработали и что с кошельком., `build_order_keyboard` — Кнопка «открыть заказ в кабинете» для уведомлений о проблемах.
 - `app/services/stars_shop_service.py` — Python-модуль
   Классы: `StarsShopError`, `StarsShopDisabledError`, `StarsQuantityError` (1 методов), `StarsRecipientError`, `StarsPurchaseRestrictedError`, `StarsInsufficientBalanceError` (2 методов), `StarsPriceChangedError` (1 методов), `StarsIdempotencyConflictError`, `StarsOrderStateError`, `StarsShopConfig`, `StarsQuote`, `StarsPurchaseResult`, `StarsShopStats`
-  Функции: `get_shop_config`, `is_shop_available` — Магазин виден пользователям: включён и выдача настроена (или тестовый режим)., `normalize_recipient` — Ник получателя без ``@`` и ссылки ``t.me/``; бросает ``StarsRecipientError``., `quote_stars` — Цена за ``quantity`` звёзд по текущим настройкам., `purchase_stars_from_balance` — Списывает деньги и создаёт заказ в статусе ``paid`` атомарно и идемпотентно., `build_stars_cart` — Корзина для «пополнить недостающее и купить автоматически»., `refund_order` — Возвращает деньги на баланс. Допустимо из ``paid``, ``failed``, ``needs_review``., `admin_retry_order` — Снова поставить в очередь заказ из ``failed`` или после ручной проверки ``needs_review``., `admin_mark_completed` — Закрыть ``needs_review``: админ убедился, что звёзды дошли., `list_user_orders`, `get_user_order`, `admin_list_orders`, `admin_stats`
+  Функции: `get_shop_config`, `is_shop_available` — Магазин виден пользователям: включён и выдача настроена (или тестовый режим)., `normalize_recipient` — Ник получателя без ``@`` и ссылки ``t.me/``; бросает ``StarsRecipientError``., `quote_stars` — Цена за ``quantity`` звёзд по текущим настройкам., `purchase_stars_from_balance` — Списывает деньги и создаёт заказ в статусе ``paid`` атомарно и идемпотентно., `build_stars_cart` — Корзина для «пополнить недостающее и купить автоматически»., `refund_order` — Возвращает деньги на баланс. Допустимо из ``paid``, ``failed``, ``needs_review``., `admin_retry_order` — Снова поставить в очередь заказ из ``failed`` или после ручной проверки ``needs_review``., `admin_mark_completed` — Закрыть ``needs_review``: админ убедился, что звёзды дошли., `list_user_orders`, `get_user_order`, `admin_list_orders`, `admin_stats` — Сводка за период. Себестоимость — по курсу на момент выдачи; у заказов без него —
 - `app/services/start_media_service.py` — Python-модуль
   Классы: нет
   Функции: `get_start_video_file_id` — file_id видео для стартового меню либо None., `set_start_video_file_id` — Сохраняет (или очищает) file_id видео стартового меню., `reset_start_video_cache` — Сбрасывает кеш (для тестов и ручной инвалидации).
@@ -1912,6 +1915,9 @@
 - `app/services/tariff_switch_policy.py` — Python-модуль
   Классы: нет
   Функции: `remaining_days_for_switch` — Сколько дней остатка оплачивать при переключении тарифа., `should_reset_used_traffic` — Обнулять ли счётчик трафика при переключении тарифа.
+- `app/services/ton_rate_service.py` — Python-модуль
+  Классы: `TonRate` (1 методов)
+  Функции: `get_ton_rate` — Текущий курс TON или ``None``, если его негде взять., `reset_cache`
 - `app/services/traffic_monitoring_service.py` — Python-модуль
   Классы: `TrafficViolation`, `TrafficMonitoringServiceV2` (35 методов), `TrafficMonitoringSchedulerV2` (9 методов), `TrafficMonitoringService` (6 методов), `TrafficMonitoringScheduler` (9 методов)
   Функции: нет
@@ -3157,6 +3163,9 @@
   Классы: нет
   Функции: `upgrade`, `downgrade`
 - `migrations/alembic/versions/0132_create_stars_orders.py` — Python-модуль
+  Классы: нет
+  Функции: `upgrade`, `downgrade`
+- `migrations/alembic/versions/0133_stars_orders_cost_rub.py` — Python-модуль
   Классы: нет
   Функции: `upgrade`, `downgrade`
 
@@ -4943,6 +4952,9 @@
 - `tests/services/test_stars_fulfillment_service.py` — Python-модуль
   Классы: нет
   Функции: `test_success_records_broadcasting_before_money_leaves`, `test_retryable_error_requeues_then_refunds_after_max_attempts`, `test_uncertain_broadcast_goes_to_review_without_refund`, `test_unexpected_error_after_broadcast_is_never_retried`, `test_unknown_recipient_is_refunded_immediately`, `test_recover_after_crash`, `test_dry_run_completes_without_fragment`
+- `tests/services/test_stars_notifications.py` — Python-модуль
+  Классы: нет
+  Функции: `test_completed_message_has_money_wallet_and_links`, `test_low_wallet_and_negative_margin_are_flagged`, `test_dry_run_has_no_chain_links_and_escapes_html`, `test_no_cabinet_links_without_real_cabinet_url`
 - `tests/services/test_stars_payload_amount.py` — Python-модуль
   Классы: нет
   Функции: `test_parser_extracts_amount_kopeks_from_known_payload_shapes`, `test_parser_returns_none_for_unrecognised_shapes`, `test_plausibility_accepts_lossless_round_trip` — At rate=1.0 with integer rubles, payload == reconstructed exactly., `test_plausibility_accepts_sub_ruble_drift` — 50.50 ₽ requested → 50 ⭐ × 1.0 = 50.00 ₽ reconstructed → 50 kopeks drift, well within tolerance., `test_plausibility_accepts_20pct_drift` — A 20% rate change between invoice creation and payment must NOT trip the guard., `test_plausibility_rejects_inflated_payload` — A payload claiming 10× the reconstructed amount is pathological — fall back to stars×rate., `test_plausibility_rejects_zero_or_negative`, `test_plausibility_uses_minimum_100_kopek_floor_for_tiny_amounts` — For tiny amounts (e.g. 50 kopeks reconstructed), 20% would be 10 — too tight., `test_negative_control_old_rate_was_lossy` — Regression cover: the pre-fix flow under rate=1.3 lost 0.50 ₽ on a 150 ₽ top-up., `test_negative_control_at_new_rate_is_lossless_for_integer_rubles` — At rate=1.0 with integer rubles, payload and reconstructed agree exactly.
@@ -5015,6 +5027,9 @@
 - `tests/services/test_ticket_reply_email.py` — Python-модуль
   Классы: нет
   Функции: `sent` — Перехватывает send_notification роутера., `last_message` — Подменяет чтение последнего сообщения тикета (проверка на фото)., `test_email_user_gets_ticket_reply_email`, `test_photo_reply_marked_in_context`, `test_long_reply_is_previewed`, `test_telegram_user_does_not_get_email` — Юзеру с Telegram ответ уже ушёл в бот — письмо было бы дублем., `test_disabled_toggle_blocks_email`, `test_global_notifications_switch_does_not_mute_support_replies` — ENABLE_NOTIFICATIONS не должен глушить ответ поддержки только email-юзеру., `test_user_without_verified_email_is_skipped`, `test_delivery_failure_does_not_raise`, `test_template_renders_for_supported_languages`, `test_template_escapes_html_in_preview` — Ответ поддержки вида «откройте <config>» не должен ломать вёрстку письма., `test_template_mentions_photo_when_reply_has_one`
+- `tests/services/test_ton_rate_service.py` — Python-модуль
+  Классы: нет
+  Функции: `test_manual_rate_wins_without_network`, `test_tonapi_then_cache`, `test_falls_back_to_coingecko`, `test_stale_rate_survives_outage_then_expires`, `test_rub_parsing_and_conversion`
 - `tests/services/test_traffic_daily_check_schedule.py` — Python-модуль
   Классы: нет
   Функции: `test_daily_check_runs_at_local_midnight`, `test_daily_check_today_if_local_time_is_still_ahead`

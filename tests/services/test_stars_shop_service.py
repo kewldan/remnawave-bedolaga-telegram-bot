@@ -22,6 +22,7 @@ from app.database.models import (
     tariff_promo_groups,
 )
 from app.services import stars_shop_service as shop
+from app.services.ton_rate_service import TonRate
 from tests.fixtures.sqlite_memory import memory_session
 
 
@@ -293,7 +294,6 @@ async def test_admin_review_actions(monkeypatch, shop_enabled, quiet_side_effect
 
 @pytest.mark.asyncio
 async def test_stats_count_completed_and_refunded(monkeypatch, shop_enabled, quiet_side_effects):
-    monkeypatch.setattr(settings, 'STARS_SHOP_TON_RATE_KOPEKS', 30000)
     async with memory_session(monkeypatch, _TABLES) as db:
         buyer = await _buyer(db, balance=1_000_000)
         db.add_all(
@@ -312,14 +312,30 @@ async def test_stats_count_completed_and_refunded(monkeypatch, shop_enabled, qui
                     recipient_username='a1234',
                     quantity=50,
                     amount_kopeks=8000,
+                    status='completed',
+                    idempotency_key='s3',
+                    cost_nanoton=200_000_000,
+                    ton_rate_kopeks=25000,
+                    cost_kopeks=5000,
+                ),
+                StarsOrder(
+                    user_id=buyer.id,
+                    recipient_username='a1234',
+                    quantity=50,
+                    amount_kopeks=8000,
                     status='refunded',
                     idempotency_key='s2',
                 ),
             ]
         )
         await db.commit()
-        stats = await shop.admin_stats(db)
-        assert (stats.orders_total, stats.orders_completed, stats.stars_sold) == (2, 1, 100)
-        assert (stats.revenue_kopeks, stats.refunded_kopeks) == (16000, 8000)
-        # 0.4 TON × 300 ₽ = 120 ₽ себестоимости → маржа 40 ₽
-        assert stats.margin_kopeks == 4000
+        stats = await shop.admin_stats(db, ton_rate=TonRate(kopeks=30000, source='tonapi'))
+        assert (stats.orders_total, stats.orders_completed, stats.stars_sold) == (3, 2, 150)
+        assert (stats.revenue_kopeks, stats.refunded_kopeks) == (24000, 8000)
+        # Заказ с курсом на момент выдачи — 50 ₽; старый — по текущему: 0.4 TON × 300 ₽ = 120 ₽.
+        assert stats.cost_kopeks == 17000
+        assert stats.margin_kopeks == 7000
+        assert (stats.ton_rate_kopeks, stats.ton_rate_source) == (30000, 'tonapi')
+
+        # Без курса маржу по старому заказу не посчитать — честнее не показывать.
+        assert (await shop.admin_stats(db)).margin_kopeks is None

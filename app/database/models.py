@@ -5484,6 +5484,9 @@ class StarsOrder(Base):
     fragment_req_id = Column(String(128), nullable=True)
     ton_tx_hash = Column(String(128), nullable=True)
     cost_nanoton = Column(BigInteger, nullable=True)
+    # Курс TON и себестоимость в копейках на момент выдачи — маржа не плывёт вместе с курсом
+    ton_rate_kopeks = Column(Integer, nullable=True)
+    cost_kopeks = Column(BigInteger, nullable=True)
     attempts = Column(Integer, nullable=False, default=0, server_default='0')
     last_error = Column(Text, nullable=True)
     next_attempt_at = Column(AwareDateTime(), nullable=True)
