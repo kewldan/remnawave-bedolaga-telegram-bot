@@ -1801,6 +1801,15 @@ async def activate_trial(
     if subscription_service.is_configured and panel_user is None:
         from app.services.remnawave_retry_queue import remnawave_retry_queue
 
+        # На ошибке create_remnawave_user делает db.rollback(), и user с
+        # subscription протухают. Любое чтение их полей ниже (user.id, ответ,
+        # уведомление админам) — ленивая подгрузка в async-роуте: MissingGreenlet
+        # и HTTP 500 уже ПОСЛЕ того, как триал закоммичен. Перечитываем явно,
+        # вместе с тарифом — его читает ответ.
+        await db.refresh(user)
+        await db.refresh(subscription)
+        await db.refresh(subscription, ['tariff'])
+
         remnawave_retry_queue.enqueue(
             subscription_id=subscription.id,
             user_id=user.id,
