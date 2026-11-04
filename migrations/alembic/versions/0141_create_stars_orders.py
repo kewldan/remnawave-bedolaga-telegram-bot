@@ -1,7 +1,7 @@
 """create stars_orders table
 
-Revision ID: 0137
-Revises: 0136
+Revision ID: 0141
+Revises: 0140
 Create Date: 2026-10-04
 
 """
@@ -11,8 +11,8 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = '0137'
-down_revision: Union[str, None] = '0136'
+revision: str = '0141'
+down_revision: Union[str, None] = '0140'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
