@@ -1560,6 +1560,9 @@ async def activate_purchase(db: AsyncSession, purchase_token: str, *, skip_notif
     # Resolve notification params before any commit (avoids lazy-loading after commit)
     notification_tariff_name = tariff.name
     notification_language = user.language or 'ru'
+    # После отката в except purchase протухает: purchase.id там — ленивая
+    # подгрузка в async (MissingGreenlet) вместо внятной ошибки.
+    purchase_id = purchase.id
 
     try:
         subscription_service = SubscriptionService()
@@ -1631,7 +1634,18 @@ async def activate_purchase(db: AsyncSession, purchase_token: str, *, skip_notif
                 commit=False,
             )
 
-        await subscription_service.create_remnawave_user(db, subscription, reset_traffic=reset_traffic)
+        panel_user = await subscription_service.create_remnawave_user(db, subscription, reset_traffic=reset_traffic)
+        if panel_user is None:
+            # На любой ошибке панели (почта закреплена за чужим аккаунтом,
+            # таймаут, панель не настроена) create_remnawave_user уже сделал
+            # db.rollback() и вернул None. Подписка здесь создана/продлена с
+            # commit=False, так что откат унёс и её, и привязку подарка, и
+            # заведённый под получение аккаунт. Продолжать нельзя: новая
+            # подписка отвязана (refresh -> InvalidRequestError -> HTTP 500), а
+            # продлённая молча вернулась к старому сроку — и покупка ушла бы в
+            # DELIVERED без доставки. Покупка остаётся в прежнем статусе.
+            # Не 502/503/504: кабинет считает их падением бэкенда.
+            raise GuestPurchaseError('Activation failed, please try again', status_code=500)
         await db.refresh(subscription)
 
         purchase.subscription_url = subscription.subscription_url
@@ -1706,7 +1720,7 @@ async def activate_purchase(db: AsyncSession, purchase_token: str, *, skip_notif
         raise
     except Exception:
         await db.rollback()
-        logger.exception('Failed to activate purchase', purchase_id=purchase.id)
+        logger.exception('Failed to activate purchase', purchase_id=purchase_id)
         raise GuestPurchaseError('Activation failed, please try again', status_code=500)
 
     return purchase
