@@ -4189,6 +4189,9 @@
 - `tests/database/test_gift_cart_completion_postgres.py` — Python-модуль
   Классы: нет
   Функции: `test_committed_gift_cleanup_preserves_new_cart_and_single_debit`
+- `tests/database/test_gift_claim_panel_failure_postgres.py` — Python-модуль
+  Классы: нет
+  Функции: `test_gift_claim_panel_rollback_is_clean_error` — Как на проде 09.11: почта уже закреплена за аккаунтом панели другого человека.
 - `tests/database/test_gift_requote_consent_postgres.py` — Python-модуль
   Классы: нет
   Функции: `test_gift_new_price_requires_consent_before_any_debit`
